@@ -254,7 +254,7 @@ function if_local_path() {
   fi
 }
 
-function aws_init() {
+function initialize() {
   set -euo pipefail
   source /helper.sh
   aws_pager_off

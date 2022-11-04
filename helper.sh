@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # Prints arguments if DEBUG environment variable is set to true
 function debug() {
   if [[ -n "${DEBUG+x}" ]] && [[ "${DEBUG}" == "true" ]]; then

@@ -1,9 +1,10 @@
 # AWS CLI Docker Image
 
-This project produces a docker image based on amazon/aws-cli with added functionality
-to support automatic role switching with STS, etc.
+This project produces a docker image with minimal layers containing the AWS CLI
+with added functionality to support automatic role switching with STS, etc.
 
-This repository produces both linyx/amd64 and linux/arm64 docker images. 
+This repository produces both linyx/amd64 and linux/arm64 docker images on a
+variety of distributions.
 
 # How do I use this docker image?
 
@@ -68,5 +69,5 @@ docker run -it --rm \
 
 ## License
 
-The contents of this repository are under the BSD 3-Clause license. See the
-license [here](https://github.com/truemark/aws-cli-docker/blob/main/LICENSE.txt).
+The contents of this repository are released under the BSD 3-Clause license. See the
+license [here](https://github.com/truemark/aws-cli-dockegitr/blob/main/LICENSE.txt).

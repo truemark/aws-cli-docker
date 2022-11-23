@@ -1,6 +1,7 @@
 name: beta
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
@@ -10,22 +11,62 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
         with:
           platforms: all
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Build
         run: |
           docker buildx build \
-            --push \
-            --platform linux/arm64,linux/amd64 \
-            -t truemark/aws-cli:beta .
+             --push \
+             --platform linux/arm64,linux/amd64 \
+             -f amazonlinux2.Dockerfile \
+             -t truemark/aws-cli:beta-2-${{github.run_number}}-amazonlinux2 \
+             -t truemark/aws-cli:beta-2-amazonlinux2 \
+             -t truemark/aws-cli:beta-amazonlinux2 \
+             .
+           docker buildx build \
+             --push \
+             --platform linux/arm64,linux/amd64 \
+             -f amazonlinux2022.Dockerfile \
+             -t truemark/aws-cli:beta-2-${{github.run_number}}-amazonlinux2022 \
+             -t truemark/aws-cli:beta-2-amazonlinux2022 \
+             -t truemark/aws-cli:beta-2 \
+             -t truemark/aws-cli:beta-amazonlinux2022 \
+             -t truemark/aws-cli:beta \
+             .
+           docker buildx build \
+             --push \
+             --platform linux/arm64,linux/amd64 \
+             -f ubuntu-focal.Dockerfile \
+             -t truemark/aws-cli:beta-2-${{github.run_number}}-ubuntu-focal \
+             -t truemark/aws-cli:beta-2-ubuntu-focal \
+             -t truemark/aws-cli:beta-ubuntu-focal \
+             .
+           docker buildx build \
+             --push \
+             --platform linux/arm64,linux/amd64 \
+             -f ubuntu-jammy.Dockerfile \
+             -t truemark/aws-cli:beta-2-${{github.run_number}}-ubuntu-jammy \
+             -t truemark/aws-cli:beta-2-ubuntu-jammy \
+             -t truemark/aws-cli:beta-ubuntu-jammy \
+             -t truemark/aws-cli:beta-2-ubuntu \
+             -t truemark/aws-cli:beta-ubuntu \
+             .
+           docker buildx build \
+             --push \
+             --platform linux/arm64,linux/amd64 \
+             -f alpine.Dockerfile \
+             -t truemark/aws-cli:beta-2-${{github.run_number}}-alpine \
+             -t truemark/aws-cli:beta-2-alpine \
+             -t truemark/aws-cli:beta-alpine \
+             .

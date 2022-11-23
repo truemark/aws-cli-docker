@@ -255,8 +255,6 @@ function if_local_path() {
 }
 
 function initialize() {
-  set -euo pipefail
-  source /helper.sh
   aws_pager_off
   aws_authentication
   if_aws_assume_role

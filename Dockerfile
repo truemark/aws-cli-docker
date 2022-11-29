@@ -10,7 +10,6 @@ RUN if [ "${OS_NAME}" = "debian" ] || [ "${OS_NAME}" = "ubuntu" ]; then \
     elif [ "${OS_NAME}" = "amazonlinux" ]; then \
       yum install -y -q findutils unzip; \
     fi
-#RUN DEBIAN_FRONTEND=noninteractive apt-get update -qq && apt-get install -qq curl ca-certificates unzip --no-install-recommends
 RUN if [ "$TARGETARCH" = "amd64" ]; then ARCHITECTURE="x86_64"; elif [ "$TARGETARCH" = "arm64" ]; then ARCHITECTURE="aarch64"; else echo "Unsupported architecture: $TARGETARCH" && exit 1; fi && \
     curl -sSLf "https://awscli.amazonaws.com/awscli-exe-linux-${ARCHITECTURE}.zip" -o "awscliv2.zip"
 RUN unzip awscliv2.zip

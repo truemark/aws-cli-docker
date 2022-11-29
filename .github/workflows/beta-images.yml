@@ -7,13 +7,13 @@ on:
       - develop
 
 jobs:
-  build:
+  alpine-316:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
@@ -27,46 +27,307 @@ jobs:
       - name: Build
         run: |
           docker buildx build \
-             --push \
-             --platform linux/arm64,linux/amd64 \
-             -f amazonlinux2.Dockerfile \
-             -t truemark/aws-cli:beta-2-${{github.run_number}}-amazonlinux2 \
-             -t truemark/aws-cli:beta-2-amazonlinux2 \
-             -t truemark/aws-cli:beta-amazonlinux2 \
-             .
-           docker buildx build \
-             --push \
-             --platform linux/arm64,linux/amd64 \
-             -f amazonlinux2022.Dockerfile \
-             -t truemark/aws-cli:beta-2-${{github.run_number}}-amazonlinux2022 \
-             -t truemark/aws-cli:beta-2-amazonlinux2022 \
-             -t truemark/aws-cli:beta-2 \
-             -t truemark/aws-cli:beta-amazonlinux2022 \
-             -t truemark/aws-cli:beta \
-             .
-           docker buildx build \
-             --push \
-             --platform linux/arm64,linux/amd64 \
-             -f ubuntu-focal.Dockerfile \
-             -t truemark/aws-cli:beta-2-${{github.run_number}}-ubuntu-focal \
-             -t truemark/aws-cli:beta-2-ubuntu-focal \
-             -t truemark/aws-cli:beta-ubuntu-focal \
-             .
-           docker buildx build \
-             --push \
-             --platform linux/arm64,linux/amd64 \
-             -f ubuntu-jammy.Dockerfile \
-             -t truemark/aws-cli:beta-2-${{github.run_number}}-ubuntu-jammy \
-             -t truemark/aws-cli:beta-2-ubuntu-jammy \
-             -t truemark/aws-cli:beta-ubuntu-jammy \
-             -t truemark/aws-cli:beta-2-ubuntu \
-             -t truemark/aws-cli:beta-ubuntu \
-             .
-           docker buildx build \
-             --push \
-             --platform linux/arm64,linux/amd64 \
-             -f alpine.Dockerfile \
-             -t truemark/aws-cli:beta-2-${{github.run_number}}-alpine \
-             -t truemark/aws-cli:beta-2-alpine \
-             -t truemark/aws-cli:beta-alpine \
-             .
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="alpine" \
+            --build-arg OS_VERSION="3.16" \
+            -f alpine.Dockerfile \
+            -t truemark/aws-cli:beta-alpine-3.16 \
+            .
+  alpine-317:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="alpine" \
+            --build-arg OS_VERSION="3.17" \
+            -f alpine.Dockerfile \
+            -t truemark/aws-cli:beta-alpine-3.17 \
+            .
+  ubuntu-focal:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="ubuntu" \
+            --build-arg OS_VERSION="focal" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-ubuntu-focal \
+            .
+  ubuntu-jammy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="ubuntu" \
+            --build-arg OS_VERSION="jammy" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-ubuntu-jammy \
+            .
+  debian-buster:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="debian" \
+            --build-arg OS_VERSION="buster" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-debian-buster \
+            .
+  debian-bullseye:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="debian" \
+            --build-arg OS_VERSION="bullseye" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-debian-bullseye \
+            .
+  debian-bookworm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="debian" \
+            --build-arg OS_VERSION="bookworm" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-debian-bookworm \
+            .
+  debian-buster-slim:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="debian" \
+            --build-arg OS_VERSION="buster-slim" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-debian-buster-slim \
+            .
+  debian-bullseye-slim:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="debian" \
+            --build-arg OS_VERSION="bullseye-slim" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-debian-bullseye-slim \
+            .
+  debian-bookworm-slim:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="debian" \
+            --build-arg OS_VERSION="bookworm-slim" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-debian-bookworm-slim \
+            .
+  amazonlinux-2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="amazonlinux" \
+            --build-arg OS_VERSION="2" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-amazonlinux-2 \
+            .
+  amazonlinux-2022:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="amazonlinux" \
+            --build-arg OS_VERSION="2022" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-amazonlinux-2022 \
+            .

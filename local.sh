@@ -6,47 +6,94 @@
 
 set -euo pipefail
 
+export BUILDKIT_PROGRESS=plain
+
 docker buildx build \
- --push \
- --platform linux/arm64,linux/amd64 \
- -f amazonlinux2.Dockerfile \
- -t truemark/aws-cli:beta-2-${{github.run_number}}-amazonlinux2 \
- -t truemark/aws-cli:beta-2-amazonlinux2 \
- -t truemark/aws-cli:beta-amazonlinux2 \
- .
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="ubuntu" \
+  --build-arg OS_VERSION="focal" \
+  -f Dockerfile \
+  -t truemark/aws-cli:beta-ubuntu-focal \
+  .
+
 docker buildx build \
- --push \
- --platform linux/arm64,linux/amd64 \
- -f amazonlinux2022.Dockerfile \
- -t truemark/aws-cli:beta-2-${{github.run_number}}-amazonlinux2022 \
- -t truemark/aws-cli:beta-2-amazonlinux2022 \
- -t truemark/aws-cli:beta-2 \
- -t truemark/aws-cli:beta-amazonlinux2022 \
- -t truemark/aws-cli:beta \
- .
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="ubuntu" \
+  --build-arg OS_VERSION="jammy" \
+  -f Dockerfile \
+  -t truemark/aws-cli:beta-ubuntu-jammy \
+  .
+
 docker buildx build \
- --push \
- --platform linux/arm64,linux/amd64 \
- -f ubuntu-focal.Dockerfile \
- -t truemark/aws-cli:beta-2-${{github.run_number}}-ubuntu-focal \
- -t truemark/aws-cli:beta-2-ubuntu-focal \
- -t truemark/aws-cli:beta-ubuntu-focal \
- .
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="debian" \
+  --build-arg OS_VERSION="buster" \
+  -f Dockerfile \
+  -t truemark/aws-cli:beta-debian-buster \
+  .
+
 docker buildx build \
- --push \
- --platform linux/arm64,linux/amd64 \
- -f ubuntu-jammy.Dockerfile \
- -t truemark/aws-cli:beta-2-${{github.run_number}}-ubuntu-jammy \
- -t truemark/aws-cli:beta-2-ubuntu-jammy \
- -t truemark/aws-cli:beta-ubuntu-jammy \
- -t truemark/aws-cli:beta-2-ubuntu \
- -t truemark/aws-cli:beta-ubuntu \
- .
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="debian" \
+  --build-arg OS_VERSION="bullseye" \
+  -f Dockerfile \
+  -t truemark/aws-cli:beta-debian-bullseye \
+  .
+
 docker buildx build \
- --push \
- --platform linux/arm64,linux/amd64 \
- -f alpine.Dockerfile \
- -t truemark/aws-cli:beta-2-${{github.run_number}}-alpine \
- -t truemark/aws-cli:beta-2-alpine \
- -t truemark/aws-cli:beta-alpine \
- .
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="debian" \
+  --build-arg OS_VERSION="bookworm" \
+  -f Dockerfile \
+  -t truemark/aws-cli:beta-debian-bookworm \
+  .
+
+docker buildx build \
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="amazonlinux" \
+  --build-arg OS_VERSION="2" \
+  -f Dockerfile \
+  -t truemark/aws-cli:beta-amazonlinux-2 \
+  .
+
+docker buildx build \
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="amazonlinux" \
+  --build-arg OS_VERSION="2022" \
+  -f Dockerfile \
+  -t truemark/aws-cli:beta-amazonlinux-2022 \
+  .
+
+docker buildx build \
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="alpine" \
+  --build-arg OS_VERSION="3.16" \
+  -f alpine.Dockerfile \
+  -t truemark/aws-cli:beta-alpine-3.16 \
+  .
+
+docker buildx build \
+  --push \
+  --builder beta \
+  --platform linux/arm64,linux/amd64 \
+  --build-arg OS_NAME="alpine" \
+  --build-arg OS_VERSION="3.17" \
+  -f alpine.Dockerfile \
+  -t truemark/aws-cli:beta-alpine-3.17 \
+  .

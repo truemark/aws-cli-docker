@@ -3,7 +3,7 @@
 This project produces a docker image with minimal layers containing the AWS CLI
 with added functionality to support automatic role switching with STS, etc.
 
-This repository produces both linux/amd64 and linux/arm64 docker images on a
+This repository produces both linux/amd64 and linux/arm64 docker images for a
 variety of distributions.
 
 # How do I use this docker image?

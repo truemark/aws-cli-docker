@@ -76,6 +76,7 @@ docker buildx build \
   --build-arg OS_VERSION="2022" \
   -f Dockerfile \
   -t truemark/aws-cli:beta-amazonlinux-2022 \
+  --no-cache \
   .
 
 docker buildx build \

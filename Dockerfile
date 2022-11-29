@@ -1,6 +1,5 @@
 ARG OS_NAME
 ARG OS_VERSION
-
 FROM $OS_NAME:$OS_VERSION as build
 ARG OS_NAME
 ARG OS_VERSION
@@ -21,11 +20,15 @@ RUN rm -rf /usr/local/aws-cli/v2/current/dist/aws_completer \
 COPY --from=truemark/jq:latest /usr/local/ /usr/local/
 COPY helper.sh /usr/local/bin/helper.sh
 
+ARG OS_NAME
+ARG OS_VERSION
 FROM $OS_NAME:$OS_VERSION as test
 COPY --from=build /usr/local/ /usr/local/
 COPY test.sh /test.sh
 RUN /test.sh
 
+ARG OS_NAME
+ARG OS_VERSION
 FROM $OS_NAME:$OS_VERSION
 COPY --from=test /usr/local/ /usr/local/
 RUN echo "source /usr/local/bin/helper.sh && initialize" >> /root/.bashrc && \

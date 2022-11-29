@@ -1,7 +1,5 @@
 ARG OS_NAME
 ARG OS_VERSION
-
-ARG IMAGE
 FROM $OS_NAME:$OS_VERSION as build
 RUN apk add --no-cache git unzip groff build-base libffi-dev cmake python3 python3-dev
 RUN git clone --single-branch --depth 1 -b v2 https://github.com/aws/aws-cli.git
@@ -18,18 +16,24 @@ RUN rm -rf \
 RUN find /usr/local/aws-cli/v2/current/dist/awscli/data -name completions-1*.json -delete
 RUN find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete
 
+ARG OS_NAME
+ARG OS_VERSION
 FROM $OS_NAME:$OS_VERSION as build2
 COPY --from=build /usr/local/aws-cli/ /usr/local/aws-cli/
 COPY --from=truemark/jq:latest /usr/local/ /usr/local/
 COPY helper.sh /usr/local/bin/helper.sh
 RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin
 
+ARG OS_NAME
+ARG OS_VERSION
 FROM $OS_NAME:$OS_VERSION as test
 RUN apk add bash --no-cache
 COPY --from=build2 /usr/local/ /usr/local/
 COPY test.sh /test.sh
 RUN /test.sh
 
+ARG OS_NAME
+ARG OS_VERSION
 FROM $OS_NAME:$OS_VERSION
 COPY --from=test /usr/local/ /usr/local/
 RUN apk add bash --no-cache && \

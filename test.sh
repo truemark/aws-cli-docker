@@ -10,7 +10,8 @@ if [[ "${TEXT}" != "test" ]]; then
 fi
 
 # Simple test to make sure the aws command works
-aws configure list
+#aws configure list
+aws help
 
 # Testing helper script
 source /usr/local/bin/helper.sh

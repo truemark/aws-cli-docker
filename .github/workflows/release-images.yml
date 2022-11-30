@@ -361,6 +361,7 @@ jobs:
             -t truemark/aws-cli:2-amazonlinux-2022 \
             -t truemark/aws-cli:amazonlinux-2022 \
             -t truemark/aws-cli:amazonlinux \
+            -t truemark/aws-cli:latest \
             .
       - name: Keepalive
         uses: gautamkrishnar/keepalive-workflow@v1

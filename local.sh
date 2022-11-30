@@ -8,6 +8,8 @@ set -euo pipefail
 
 export BUILDKIT_PROGRESS=plain
 
+docker image build -t moo --build-arg OS_NAME="ubuntu" --build-arg OS_VERSION="focal" -f Dockerfile .
+
 docker buildx build \
   --push \
   --builder beta \

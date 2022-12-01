@@ -270,7 +270,7 @@ function if_codeartifact_login() {
   if [[ -n "${AWS_CODEARTIFACT_TOOL+x}" ]] && [[ -n "${AWS_CODEARTIFACT_REPO+x}" ]] && [[ -n "${AWS_CODEARTIFACT_DOMAIN+x}" ]] ; then
     case "${AWS_CODEARTIFACT_TOOL}" in
     npm|mvn|gradle|pip|twine|nuget)
-      continue
+      debug "Recognized codeartifact tool type."
         ;;
     *)
       debug "Unrecognized codeartifact tool type."

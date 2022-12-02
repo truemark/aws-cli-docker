@@ -254,46 +254,27 @@ function if_local_path() {
   fi
 }
 
-# Login to codeartifact domain/repo using $TOOL (npm, nuget, etc)
+# Get authorization token for aws codeartifact
 function codeartifact_login() {
   debug "Calling codeartifact_login()"
-  aws codeartifact login --tool "${AWS_CODEARTIFACT_TOOL}" \
-    --repository "${AWS_CODEARTIFACT_REPO}" \
-    --domain "${AWS_CODEARTIFACT_DOMAIN}" \
-    --region "${AWS_DEFAULT_REGION}" || debug "aws codeartifact login failed."
-    debug "aws codeartifact login successful."
+  echo codeartifact_auth_token=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
+    --domain-owner ${AWS_ACCOUNT_ID} \
+    --region ${AWS_DEFAULT_REGION} \
+    --query authorizationtoken --output text) > codeartifact_token
+
+  debug "codeartifact_auth_token saved to file: codeartifact_token"
 }
 
-# Calls codeartifact_login if AWS_CODEARTIFACT_{DOMAIN,REPO,TOOL} are set
+# Calls codeartifact_login if AWS_CODEARTIFACT_{DOMAIN,REPO} are set
 function if_codeartifact_login() {
   debug "Calling if_codeartifact_login()"
-  if [[ -n "${AWS_CODEARTIFACT_TOOL+x}" ]] && [[ -n "${AWS_CODEARTIFACT_REPO+x}" ]] && [[ -n "${AWS_CODEARTIFACT_DOMAIN+x}" ]] ; then
-    case "${AWS_CODEARTIFACT_TOOL}" in
-    npm|mvn|gradle|pip|twine|nuget)
-      debug "Recognized codeartifact tool type."
-        ;;
-    *)
-      debug "Unrecognized codeartifact tool type."
-      debug "Supported types: npm, mvn, gradle, pip, twine, nuget"
-      exit 1
-    esac
-    debug "Detected tool: ${AWS_CODEARTIFACT_TOOL}"
-    debug "Detected repo: ${AWS_CODEARTIFACT_REPO}"
-    debug "Detected domain: ${AWS_CODEARTIFACT_DOMAIN}"
+  if [[ -n "${AWS_CODEARTIFACT_REPO+x}" ]] && [[ -n "${AWS_CODEARTIFACT_DOMAIN+x}" ]] ; then
     debug "Detected account: ${AWS_ACCOUNT_ID}"
     debug "Detected region: ${AWS_DEFAULT_REGION}"
+    debug "Detected domain: ${AWS_CODEARTIFACT_DOMAIN}"
+    debug "Detected repo: ${AWS_CODEARTIFACT_REPO}"
 
-    if [[ "${AWS_CODEARTIFACT_TOOL+x}" == "nuget" ]]; then
-      debug "NuGet login detected. Requesting auth token."
-      echo CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
-        --domain-owner ${AWS_ACCOUNT_ID} \
-        --region ${AWS_DEFAULT_REGION} \
-        --query authorizationToken --output text) > codeartifact_token
-
-      debug "CODEARTIFACT_AUTH_TOKEN saved to file: codeartifact_token"
-    else
-      codeartifact_login
-    fi
+    codeartifact_login
   else
     debug "Codeartifact variables not detected"
   fi

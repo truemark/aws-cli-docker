@@ -51,7 +51,6 @@ docker run -it --rm \
   -e AWS_WEB_IDENTITY_TOKEN="YOUR_OIDC_TOKEN" \
   -e AWS_ASSUME_ROLE_ARN="YOUR_ROLE_ARN" \
   -e AWS_ROLE_SESSION_NAME="YOUR_SESSION_NAME" \
-  -e AWS_CODEARTIFACT_TOOL="YOUR_CODEARTIFACT_TOOL" \
   -e AWS_CODEARTIFACT_DOMAIN="YOUR_CODEARTIFACT_DOMAIN" \
   -e AWS_CODEARTIFACT_REPO="YOUR_CODEARTIFACT_REPO" \
   truemark/aws-cli:latest
@@ -65,7 +64,6 @@ docker run -it --rm \
 | AWS_ASSUME_ROLE_ARN         | Optional role to assume.                                                                |
 | AWS_CODEARTIFACT_DOMAIN     | AWS Codeartifact domain                                                                 |
 | AWS_CODEARTIFACT_REPO       | AWS Codeartifact repository                                                             |
-| AWS_CODEARTIFACT_TOOL       | AWS Codeartifact tool type (nuget, npm, maven, pip, etc)                                |
 | AWS_EXCLUDE_ACCOUNT_IDS     | Account IDs to exclude when using aws_organization_account_ids function.                |
 | AWS_EXCLUDE_OU_IDS          | AWS Organizational units to exclude when using aws_organization_account_ids.            |
 | AWS_OIDC_ROLE_ARN           | Alternative variable to AWS_ROLE_ARN.                                                   |

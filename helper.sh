@@ -258,10 +258,10 @@ function if_local_path() {
 function codeartifact_login() {
   debug "Calling codeartifact_login()"
   mkdir codeartifact
-  echo CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
+  echo "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
     --domain-owner ${AWS_ACCOUNT_ID} \
     --region ${AWS_DEFAULT_REGION} \
-    --query authorizationToken --output text) > codeartifact/token
+    --query authorizationToken --output text)" > codeartifact/token
 
   debug "CODEARTIFACT_AUTH_TOKEN saved to file: codeartifact/token"
 }

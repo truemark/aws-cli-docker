@@ -257,12 +257,13 @@ function if_local_path() {
 # Get authorization token for aws codeartifact
 function codeartifact_login() {
   debug "Calling codeartifact_login()"
-  echo "CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
+  mkdir codeartifact
+  echo CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
     --domain-owner ${AWS_ACCOUNT_ID} \
     --region ${AWS_DEFAULT_REGION} \
-    --query authorizationtoken --output text)" > ~/.codeartifact_token
+    --query authorizationToken --output text) > codeartifact/token
 
-  debug "CODEARTIFACT_AUTH_TOKEN saved to file: ~/.codeartifact_token"
+  debug "CODEARTIFACT_AUTH_TOKEN saved to file: codeartifact/token"
 }
 
 # Calls codeartifact_login if AWS_CODEARTIFACT_{DOMAIN,REPO} are set

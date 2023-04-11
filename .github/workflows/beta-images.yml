@@ -6,8 +6,12 @@ on:
     branches:
       - develop
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
-  alpine-316:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,14 +21,25 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          platforms: all
-      - name: Set up Docker Buildx
+          role-to-assume: "${{ secrets.AWS_ASSUME_ROLE }}"
+          aws-region: "us-east-1"
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
+      - name: Setup Buildx Remote Docker
         id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+        uses: truemark/aws-buildx-remote-docker-instance-action@v2
+        with:
+          security-group-id: "${{ vars.SECURITY_GROUP_ID }}"
+          subnet-id: "${{ vars.SUBNET_ID }}"
+          instance-profile: "${{ vars.INSTANCE_PROFILE }}"
+          region: "us-east-2"
+      - name: Build Alpine 3.16
         run: |
           docker buildx build \
             --push \
@@ -34,24 +49,17 @@ jobs:
             -f alpine.Dockerfile \
             -t truemark/aws-cli:beta-alpine-3.16 \
             .
-  alpine-317:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy Alpine 3.16 to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-alpine-3.16"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-alpine-3.16"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Alpine 3.17
         run: |
           docker buildx build \
             --push \
@@ -61,24 +69,17 @@ jobs:
             -f alpine.Dockerfile \
             -t truemark/aws-cli:beta-alpine-3.17 \
             .
-  ubuntu-focal:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy beta-alpine-3.17 to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-alpine-3.17"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-alpine-3.17"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Ubuntu Focal
         run: |
           docker buildx build \
             --push \
@@ -88,24 +89,17 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-ubuntu-focal \
             .
-  ubuntu-jammy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy beta-ubuntu-focal to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-ubuntu-focal"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-ubuntu-focal"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Ubuntu Jammy
         run: |
           docker buildx build \
             --push \
@@ -115,51 +109,17 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-ubuntu-jammy \
             .
-  debian-buster:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy beta-ubuntu-jammy to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
-        run: |
-          docker buildx build \
-            --push \
-            --platform linux/arm64,linux/amd64 \
-            --build-arg OS_NAME="debian" \
-            --build-arg OS_VERSION="buster" \
-            -f Dockerfile \
-            -t truemark/aws-cli:beta-debian-buster \
-            .
-  debian-bullseye:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-ubuntu-jammy"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-ubuntu-jammy"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Debian Bullseye
         run: |
           docker buildx build \
             --push \
@@ -169,24 +129,17 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-debian-bullseye \
             .
-  debian-bookworm:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy beta-debian-bullseye to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-debian-bullseye"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-debian-bullseye"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Debian Bookworm
         run: |
           docker buildx build \
             --push \
@@ -196,51 +149,17 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-debian-bookworm \
             .
-  debian-buster-slim:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy beta-debian-bookworm to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
-        run: |
-          docker buildx build \
-            --push \
-            --platform linux/arm64,linux/amd64 \
-            --build-arg OS_NAME="debian" \
-            --build-arg OS_VERSION="buster-slim" \
-            -f Dockerfile \
-            -t truemark/aws-cli:beta-debian-buster-slim \
-            .
-  debian-bullseye-slim:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-debian-bookworm"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-debian-bookworm"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Debian Bullseye Slim
         run: |
           docker buildx build \
             --push \
@@ -250,24 +169,17 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-debian-bullseye-slim \
             .
-  debian-bookworm-slim:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy beta-debian-bullseye-slim to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-debian-bullseye-slim"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-debian-bullseye-slim"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Debian Bookworm Slim
         run: |
           docker buildx build \
             --push \
@@ -277,24 +189,17 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-debian-bookworm-slim \
             .
-  amazonlinux-2:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy beta-debian-bookworm-slim to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-debian-bookworm-slim"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-debian-bookworm-slim"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Amazon Linux 2
         run: |
           docker buildx build \
             --push \
@@ -304,24 +209,17 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-amazonlinux-2 \
             .
-  amazonlinux-2022:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - name: Copy beta-amazonlinux-2 to ECR
+        uses: truemark/skopeo-copy-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Build
+          src-image: "docker://truemark/aws-cli:beta-amazonlinux-2"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-amazonlinux-2"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Amazon Linux 2022
         run: |
           docker buildx build \
             --push \
@@ -331,3 +229,44 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-amazonlinux-2022 \
             .
+      - name: Copy beta-amazonlinux-2022 to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:beta-amazonlinux-2022"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-amazonlinux-2022"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Amazon Linux 2023
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="amazonlinux" \
+            --build-arg OS_VERSION="2023" \
+            -f Dockerfile \
+            -t truemark/aws-cli:beta-amazonlinux-2023 \
+            -t truemark/aws-cli:beta \
+            .
+      - name: Copy beta-amazonlinux-2023 to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:beta-amazonlinux-2023"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-amazonlinux-2023"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Copy beta to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:beta"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"

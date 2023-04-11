@@ -52,8 +52,8 @@ jobs:
       - name: Copy Alpine 3.16 to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-alpine-3.16"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-alpine-3.16"
+          src-image: "docker://truemark/aws-cli:beta-alpine-3.16"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-alpine-3.16"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -69,11 +69,11 @@ jobs:
             -f alpine.Dockerfile \
             -t truemark/aws-cli:beta-alpine-3.17 \
             .
-      - name: Copy Alpine 3.17 to ECR
+      - name: Copy beta-alpine-3.17 to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-alpine-3.17"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-alpine-3.17"
+          src-image: "docker://truemark/aws-cli:beta-alpine-3.17"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-alpine-3.17"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -89,11 +89,11 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-ubuntu-focal \
             .
-      - name: Copy Ubuntu Focal to ECR
+      - name: Copy beta-ubuntu-focal to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-ubuntu-focal"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-ubuntu-focal"
+          src-image: "docker://truemark/aws-cli:beta-ubuntu-focal"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-ubuntu-focal"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -109,11 +109,11 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-ubuntu-jammy \
             .
-      - name: Copy Ubuntu Jammy to ECR
+      - name: Copy beta-ubuntu-jammy to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-ubuntu-jammy"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-ubuntu-jammy"
+          src-image: "docker://truemark/aws-cli:beta-ubuntu-jammy"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-ubuntu-jammy"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -129,11 +129,11 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-debian-bullseye \
             .
-      - name: Copy Debian Bullseye to ECR
+      - name: Copy beta-debian-bullseye to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-debian-bullseye"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-debian-bullseye"
+          src-image: "docker://truemark/aws-cli:beta-debian-bullseye"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-debian-bullseye"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -149,11 +149,11 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-debian-bookworm \
             .
-      - name: Copy Debian Bookworm to ECR
+      - name: Copy beta-debian-bookworm to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-debian-bookworm"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-debian-bookworm"
+          src-image: "docker://truemark/aws-cli:beta-debian-bookworm"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-debian-bookworm"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -169,11 +169,11 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-debian-bullseye-slim \
             .
-      - name: Copy Debian Bullseye Slim to ECR
+      - name: Copy beta-debian-bullseye-slim to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-debian-bullseye-slim"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-debian-bullseye-slim"
+          src-image: "docker://truemark/aws-cli:beta-debian-bullseye-slim"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-debian-bullseye-slim"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -189,11 +189,11 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-debian-bookworm-slim \
             .
-      - name: Copy Debian Bookworm Slim to ECR
+      - name: Copy beta-debian-bookworm-slim to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-debian-bookworm-slim"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-debian-bookworm-slim"
+          src-image: "docker://truemark/aws-cli:beta-debian-bookworm-slim"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-debian-bookworm-slim"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -209,11 +209,11 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-amazonlinux-2 \
             .
-      - name: Copy Amazon Linux 2 to ECR
+      - name: Copy beta-amazonlinux-2 to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-amazonlinux-2"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-amazonlinux-2"
+          src-image: "docker://truemark/aws-cli:beta-amazonlinux-2"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-amazonlinux-2"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -229,11 +229,11 @@ jobs:
             -f Dockerfile \
             -t truemark/aws-cli:beta-amazonlinux-2022 \
             .
-      - name: Copy Amazon Linux 2022 to ECR
+      - name: Copy beta-amazonlinux-2022 to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-amazonlinux-2022"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-amazonlinux-2022"
+          src-image: "docker://truemark/aws-cli:beta-amazonlinux-2022"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-amazonlinux-2022"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
@@ -250,11 +250,21 @@ jobs:
             -t truemark/aws-cli:beta-amazonlinux-2023 \
             -t truemark/aws-cli:beta \
             .
-      - name: Copy Amazon Linux 2023 to ECR
+      - name: Copy beta-amazonlinux-2023 to ECR
         uses: truemark/skopeo-copy-action@v1
         with:
-          src-image: "docker://truemark/hugo:beta-amazonlinux-2023"
-          dest-image: "docker://public.ecr.aws/truemark/hugo:beta-amazonlinux-2023"
+          src-image: "docker://truemark/aws-cli:beta-amazonlinux-2023"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta-amazonlinux-2023"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Copy beta to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:beta"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:beta"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"

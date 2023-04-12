@@ -27,4 +27,4 @@ COPY --from=test /usr/local/ /usr/local/
 RUN apk add bash groff --no-cache && \
     echo "source /usr/local/bin/helper.sh && initialize" >> /root/.bashrc && \
     chmod +x /root/.bashrc
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["aws"]

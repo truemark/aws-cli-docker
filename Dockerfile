@@ -40,4 +40,4 @@ RUN if [ "${OS_NAME}" = "debian" ] || [ "${OS_NAME}" = "ubuntu" ]; then \
     fi
 RUN echo "source /usr/local/bin/helper.sh && initialize" >> /root/.bashrc && \
     chmod +x /root/.bashrc
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["aws"]

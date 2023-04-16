@@ -42,101 +42,6 @@ jobs:
           subnet-id: "${{ vars.SUBNET_ID }}"
           instance-profile: "${{ vars.INSTANCE_PROFILE }}"
           region: "us-east-2"
-      - name: Build Alpine 3.16
-        run: |
-          docker buildx build \
-            --push \
-            --platform linux/arm64,linux/amd64 \
-            --build-arg OS_NAME="alpine" \
-            --build-arg OS_VERSION="3.16" \
-            -f alpine.Dockerfile \
-            -t truemark/aws-cli:2-${{github.run_number}}-alpine-3.16 \
-            -t truemark/aws-cli:2-alpine-3.16 \
-            -t truemark/aws-cli:alpine-3.16 \
-            .
-      - name: Copy 2-${{github.run_number}}-alpine-3.16 to ECR
-        uses: truemark/skopeo-copy-action@v1
-        with:
-          src-image: "docker://truemark/aws-cli:2-${{github.run_number}}-alpine-3.16"
-          dest-image: "docker://public.ecr.aws/truemark/aws-cli:2-${{github.run_number}}-alpine-3.16"
-          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
-          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
-          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
-          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
-          multi-arch: "all"
-      - name: Copy 2-alpine-3.16 to ECR
-        uses: truemark/skopeo-copy-action@v1
-        with:
-          src-image: "docker://truemark/aws-cli:2-alpine-3.16"
-          dest-image: "docker://public.ecr.aws/truemark/aws-cli:2-alpine-3.16"
-          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
-          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
-          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
-          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
-          multi-arch: "all"
-      - name: Copy alpine-3.16 to ECR
-        uses: truemark/skopeo-copy-action@v1
-        with:
-          src-image: "docker://truemark/aws-cli:alpine-3.16"
-          dest-image: "docker://public.ecr.aws/truemark/aws-cli:alpine-3.16"
-          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
-          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
-          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
-          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
-          multi-arch: "all"
-      - name: Build Alpine 3.17
-        run: |
-          docker buildx build \
-            --push \
-            --platform linux/arm64,linux/amd64 \
-            --build-arg OS_NAME="alpine" \
-            --build-arg OS_VERSION="3.17" \
-            -f alpine.Dockerfile \
-            -t truemark/aws-cli:2-${{github.run_number}}-alpine-3.17 \
-            -t truemark/aws-cli:2-alpine-3.17 \
-            -t truemark/aws-cli:alpine-3.17 \
-            -t truemark/aws-cli:alpine \
-            .
-      - name: Copy 2-${{github.run_number}}-alpine-3.17 to ECR
-        uses: truemark/skopeo-copy-action@v1
-        with:
-          src-image: "docker://truemark/aws-cli:2-${{github.run_number}}-alpine-3.17"
-          dest-image: "docker://public.ecr.aws/truemark/aws-cli:2-${{github.run_number}}-alpine-3.17"
-          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
-          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
-          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
-          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
-          multi-arch: "all"
-      - name: Copy 2-alpine-3.17 to ECR
-        uses: truemark/skopeo-copy-action@v1
-        with:
-          src-image: "docker://truemark/aws-cli:2-alpine-3.17"
-          dest-image: "docker://public.ecr.aws/truemark/aws-cli:2-alpine-3.17"
-          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
-          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
-          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
-          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
-          multi-arch: "all"
-      - name: Copy alpine-3.17 to ECR
-        uses: truemark/skopeo-copy-action@v1
-        with:
-          src-image: "docker://truemark/aws-cli:alpine-3.17"
-          dest-image: "docker://public.ecr.aws/truemark/aws-cli:alpine-3.17"
-          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
-          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
-          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
-          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
-          multi-arch: "all"
-      - name: Copy alpine to ECR
-        uses: truemark/skopeo-copy-action@v1
-        with:
-          src-image: "docker://truemark/aws-cli:alpine"
-          dest-image: "docker://public.ecr.aws/truemark/aws-cli:alpine"
-          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
-          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
-          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
-          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
-          multi-arch: "all"
       - name: Build Ubuntu Focal
         run: |
           docker buildx build \
@@ -561,3 +466,98 @@ jobs:
           multi-arch: "all"
       - name: Keepalive
         uses: gautamkrishnar/keepalive-workflow@v1
+      - name: Build Alpine 3.16
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="alpine" \
+            --build-arg OS_VERSION="3.16" \
+            -f alpine.Dockerfile \
+            -t truemark/aws-cli:2-${{github.run_number}}-alpine-3.16 \
+            -t truemark/aws-cli:2-alpine-3.16 \
+            -t truemark/aws-cli:alpine-3.16 \
+            .
+      - name: Copy 2-${{github.run_number}}-alpine-3.16 to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:2-${{github.run_number}}-alpine-3.16"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:2-${{github.run_number}}-alpine-3.16"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Copy 2-alpine-3.16 to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:2-alpine-3.16"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:2-alpine-3.16"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Copy alpine-3.16 to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:alpine-3.16"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:alpine-3.16"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Alpine 3.17
+        run: |
+          docker buildx build \
+            --push \
+            --platform linux/arm64,linux/amd64 \
+            --build-arg OS_NAME="alpine" \
+            --build-arg OS_VERSION="3.17" \
+            -f alpine.Dockerfile \
+            -t truemark/aws-cli:2-${{github.run_number}}-alpine-3.17 \
+            -t truemark/aws-cli:2-alpine-3.17 \
+            -t truemark/aws-cli:alpine-3.17 \
+            -t truemark/aws-cli:alpine \
+            .
+      - name: Copy 2-${{github.run_number}}-alpine-3.17 to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:2-${{github.run_number}}-alpine-3.17"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:2-${{github.run_number}}-alpine-3.17"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Copy 2-alpine-3.17 to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:2-alpine-3.17"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:2-alpine-3.17"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Copy alpine-3.17 to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:alpine-3.17"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:alpine-3.17"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Copy alpine to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:alpine"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:alpine"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"

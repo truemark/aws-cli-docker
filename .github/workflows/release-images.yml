@@ -16,6 +16,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -29,6 +30,7 @@ jobs:
         with:
           role-to-assume: "${{ secrets.AWS_ASSUME_ROLE }}"
           aws-region: "us-east-1"
+          role-duration-seconds: 7200
       - name: Login to ECR
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v1

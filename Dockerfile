@@ -1,6 +1,5 @@
 ARG OS_NAME
 ARG OS_VERSION
-
 FROM $OS_NAME:$OS_VERSION as build
 ARG OS_NAME
 ARG OS_VERSION
@@ -23,7 +22,7 @@ ARG OS_VERSION
 COPY --from=build /usr/local/ /usr/local/
 COPY test.sh /test.sh
 RUN if [ "${OS_NAME}" = "debian" ] || [ "${OS_NAME}" = "ubuntu" ]; then \
-      apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq groff && apt-get -qq clean && rm -rf /var/lib/apt/lists; \
+      apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq groff --no-install-recommends && apt-get -qq clean && rm -rf /var/lib/apt/lists; \
     elif [ "${OS_NAME}" = "amazonlinux" ]; then \
       yum install -y -q groff && yum clean all; \
     fi
@@ -34,7 +33,7 @@ ARG OS_NAME
 ARG OS_VERSION
 COPY --from=test /usr/local/ /usr/local/
 RUN if [ "${OS_NAME}" = "debian" ] || [ "${OS_NAME}" = "ubuntu" ]; then \
-      apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq groff && apt-get -qq clean && rm -rf /var/lib/apt/lists; \
+      apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq groff --no-install-recommends && apt-get -qq clean && rm -rf /var/lib/apt/lists; \
     elif [ "${OS_NAME}" = "amazonlinux" ]; then \
       yum install -y -q groff && yum clean all; \
     fi

@@ -190,6 +190,7 @@ jobs:
             -t truemark/aws-cli:2-${{github.run_number}}-debian-bookworm \
             -t truemark/aws-cli:2-debian-bookworm \
             -t truemark/aws-cli:debian-bookworm \
+            -t truemark/aws-cli:debian \
             .
       - name: Copy 2-${{github.run_number}}-debian-bookworm to ECR
         uses: truemark/skopeo-copy-action@v1
@@ -221,7 +222,17 @@ jobs:
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
           dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
           multi-arch: "all"
-      - name: Build Debain Bullseye Slim
+      - name: Copy debian to ECR
+        uses: truemark/skopeo-copy-action@v1
+        with:
+          src-image: "docker://truemark/aws-cli:debian"
+          dest-image: "docker://public.ecr.aws/truemark/aws-cli:debian"
+          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
+          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
+          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
+          multi-arch: "all"
+      - name: Build Debian Bullseye Slim
         run: |
           docker buildx build \
             --push \
@@ -274,7 +285,6 @@ jobs:
             -t truemark/aws-cli:2-${{github.run_number}}-debian-bookworm-slim \
             -t truemark/aws-cli:2-debian-bookworm-slim \
             -t truemark/aws-cli:debian-bookworm-slim \
-            -t truemark/aws-cli:debian \
             .
       - name: Copy ${{github.run_number}}-debian-bookworm-slim to ECR
         uses: truemark/skopeo-copy-action@v1
@@ -301,16 +311,6 @@ jobs:
         with:
           src-image: "docker://truemark/aws-cli:debian-bookworm-slim"
           dest-image: "docker://public.ecr.aws/truemark/aws-cli:debian-bookworm-slim"
-          src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
-          src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
-          dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"
-          dest-password: "${{ steps.ecr-login.outputs.docker_password_public_ecr_aws }}"
-          multi-arch: "all"
-      - name: Copy debian to ECR
-        uses: truemark/skopeo-copy-action@v1
-        with:
-          src-image: "docker://truemark/aws-cli:debian"
-          dest-image: "docker://public.ecr.aws/truemark/aws-cli:debian"
           src-username: "${{ secrets.DOCKER_HUB_USERNAME }}"
           src-password: "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}"
           dest-username: "${{ steps.ecr-login.outputs.docker_username_public_ecr_aws }}"

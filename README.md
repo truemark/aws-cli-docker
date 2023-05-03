@@ -3,14 +3,22 @@
 This project produces a multi-architecture docker image with minimal layers
 containing the AWS CLI and a few other useful tools.
 
-Operating Systems
- * Alpine Linux
- * Amazon Linux
- * Ubuntu Linux
-
 Architectures
- * linux/amd64
- * linux/arm64
+* linux/amd64
+* linux/arm64
+
+Operating Systems
+ * ubuntu-focal
+ * ubuntu-jammy
+ * debian-bullseye
+ * debian-bullseye-slim
+ * debian-bookworm
+ * debian-bookworm-slim
+ * amazonlinux-2
+ * amazonlinux-2022
+ * amazonlinux-2023
+ * alpine-3.16
+ * alpine-3.17
 
 Installed Packages
  * tar 
@@ -20,6 +28,7 @@ Installed Packages
  * bzip2 
  * curl
  * jq
+ * findutils
 
 # How do I use this docker image?
 

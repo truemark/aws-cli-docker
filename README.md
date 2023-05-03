@@ -1,10 +1,24 @@
 # AWS CLI Docker Image
 
-This project produces a docker image with minimal layers containing the AWS CLI
-with added functionality to support automatic role switching with STS, etc.
+This project produces a multi-architecture docker image with minimal layers
+containing the AWS CLI and a few other useful tools.
 
-This repository produces both linux/amd64 and linux/arm64 docker images for a
-variety of distributions.
+Operating Systems
+ * Alpine Linux
+ * Amazon Linux
+ * Ubuntu Linux
+
+Architectures
+ * linux/amd64
+ * linux/arm64
+
+Installed Packages
+ * tar 
+ * zip 
+ * unzip 
+ * gzip 
+ * bzip2 
+ * curl
 
 # How do I use this docker image?
 

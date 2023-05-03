@@ -24,7 +24,7 @@ RUN /test.sh
 
 FROM $OS_NAME:$OS_VERSION
 COPY --from=test /usr/local/ /usr/local/
-RUN apk add bash groff tar zip unzip gzip bzip2 --no-cache && \
+RUN apk add bash groff tar zip unzip gzip bzip2 curl --no-cache && \
     echo "source /usr/local/bin/helper.sh && initialize" >> /root/.bashrc && \
     chmod +x /root/.bashrc
 ENTRYPOINT ["aws"]

@@ -19,6 +19,7 @@ Installed Packages
  * gzip 
  * bzip2 
  * curl
+ * jq
 
 # How do I use this docker image?
 

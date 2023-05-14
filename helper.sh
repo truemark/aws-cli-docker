@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+[[ "${BASH_VERSINFO:-0+x}" -lt 4 ]] && >&2 echo "bash 4 or greater required" && exit 1
+
 # Prints arguments if DEBUG environment variable is set to true
 function debug() {
   if [[ -n "${DEBUG+x}" ]] && [[ "${DEBUG}" == "true" ]]; then

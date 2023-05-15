@@ -421,7 +421,11 @@ function if_local_path() {
 ## Execute 'aws codeartifact login --tool ...' for npm / dotnet
 function codeartifact_login() {
   debug "Calling codeartifact_login()"
-  if [ $(which npm) ]; then
+  if [[ $(which npm) ]] && [[ -n ${CODEARTIFACT_NPM_NAMESPACE+x} ]]; then
+    debug "Updating npmrc with codeartifact token"
+    aws codeartifact login --tool npm --domain ${AWS_CODEARTIFACT_DOMAIN} --repository ${AWS_CODEARTIFACT_REPO} \
+      --domain-owner ${AWS_ACCOUNT_ID} --region ${AWS_DEFAULT_REGION} --namespace ${CODEARTIFACT_NPM_NAMESPACE}
+  elif [[ $(which npm) ]] && [[ -z ${CODEARTIFACT_NPM_NAMESPACE+x} ]]; then
     debug "Updating npmrc with codeartifact token"
     aws codeartifact login --tool npm --domain ${AWS_CODEARTIFACT_DOMAIN} --repository ${AWS_CODEARTIFACT_REPO} \
       --domain-owner ${AWS_ACCOUNT_ID} --region ${AWS_DEFAULT_REGION}

@@ -258,8 +258,43 @@ function if_local_path() {
   fi
 }
 
+function codeartifact_npm_login() {
+  # parse the ARN to get the region, domain, and repository
+  CODEARTIFACT_REGION=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
+  CODEARTIFACT_DOMAIN=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
+  CODEARTIFACT_REPO=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
+  # TODO Using a sub-shell do the following: (sub-shell is needed to prevent leaking of variables)
+  # TODO  sts assume into CODEARTIFACT_OIDC_ROLE_ARN or CODEARTIFACT_OIDC_ROLE_ARN if not set
+  # TODO aws codeartifact login --namespace ${CODEARTIFACT_NPM_NAMESPACE} --tool npm --repository youngliving --domain ${CODEARTIFACT_DOMAIN} --region ${CODEARTIFACT_REGION}
+  # TODO You need to modify this method to loop over CODEARTIFACT_*_OIDC_ROLE_ARN, CODEARTIFACT_*_NPM_NAMESPACE, CODEARTIFACT_*_REPOSITORY_ARN and do the necessary things
+}
+
+function if_codeartifact_npm_login() {
+  # TODO execute codeartifact_npm_login if CODEARTIFACT_REPOSITORY_ARN CODEARTIFACT_NPM_NAMESPACE are set and npm is installed
+}
+
+function codeartifact_dotnet_login() {
+  # TODO Implement me
+}
+
+function if_codeartifact_dotnet_login() {
+  # TODO execute codeartifact_dotnet_login if CODEARTIFACT_REPOSITORY_ARN variables and dotnet are installed
+}
+
+function codeartifact_maven_login() {
+  # TODO Implement me
+}
+
+function if_codeartifact_maven_login() {
+  # TODO Implement me
+}
+
+# TODO Get rid of me
 # Get authorization token for aws codeartifact
 function codeartifact_login() {
+  # aws codeartifact login --namespace yl --tool npm --repository youngliving --domain yl --profile yl-devops --region us-west-2
+  # aws codeartifact login --tool dotnet --repository youngliving --domain yl --domain-owner 534914120180
+  # aws codeartifact list-package-versions --domain my_domain --domain-owner 111122223333 --repository my_repo --format maven --namespace com.company.framework --package my-package-name
   debug "Calling codeartifact_login()"
   mkdir codeartifact
   echo "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
@@ -270,6 +305,7 @@ function codeartifact_login() {
   debug "CODEARTIFACT_AUTH_TOKEN saved to file: codeartifact/token"
 }
 
+# TODO Get rid of me
 # Calls codeartifact_login if AWS_CODEARTIFACT_{DOMAIN,REPO} are set
 function if_codeartifact_login() {
   debug "Calling if_codeartifact_login()"

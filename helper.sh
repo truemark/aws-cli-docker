@@ -258,35 +258,80 @@ function if_local_path() {
   fi
 }
 
-function codeartifact_npm_login() {
+function parse_repository_arn() {
   # parse the ARN to get the region, domain, and repository
   CODEARTIFACT_REGION=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
   CODEARTIFACT_DOMAIN=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
   CODEARTIFACT_REPO=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
+}
+
+function codeartifact_npm_login() {
+  debug "Executing codeartifact_npm_login()"
+  parse_repository_arn
   # TODO Using a sub-shell do the following: (sub-shell is needed to prevent leaking of variables)
   # TODO  sts assume into CODEARTIFACT_OIDC_ROLE_ARN or CODEARTIFACT_OIDC_ROLE_ARN if not set
   # TODO aws codeartifact login --namespace ${CODEARTIFACT_NPM_NAMESPACE} --tool npm --repository youngliving --domain ${CODEARTIFACT_DOMAIN} --region ${CODEARTIFACT_REGION}
   # TODO You need to modify this method to loop over CODEARTIFACT_*_OIDC_ROLE_ARN, CODEARTIFACT_*_NPM_NAMESPACE, CODEARTIFACT_*_REPOSITORY_ARN and do the necessary things
+
+  ## wip (breaking local tests)
+  #if [[ -n "${CODEARTIFACT_OIDC_ROLE_ARN}" ]]; then
+  #  (aws sts assume-role --role-arn "${CODEARTIFACT_OIDC_ROLE_ARN}" --role-session-name "${AWS_ROLE_SESSION_NAME}")
+  #elif [[ -z "${CODEARTIFACT_OIDC_ROLE_ARN}" ]] && [[ -n "${AWS_OIDC_ROLE_ARN}" ]]; then
+  #  (aws sts assume-role --role-arn "${AWS_OIDC_ROLE_ARN}" --role-session-name "${AWS_ROLE_SESSION_NAME}")
+  #fi
+
+  ## iterate through CODEARTIFACT_*_NPM_NAMESPACE
+  codeartifact_npm_suffix="_NPM_NAMESPACE"
+  for namespace in "${!CODEARTIFACT_@}"; do
+    if [[ "${namespace}" == *"${codeartifact_npm_suffix}" ]]; then
+      value="${!namespace}"
+      debug "Executing aws codeartifact login with npm namespace: ${value}"
+      (aws codeartifact login --namespace "${value}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+    fi
+  done
+
+  if [[ -z "${CODEARTIFACT_NPM_NAMESPACE}" ]]; then
+    debug "Executing aws codeartifact login without namespace"
+    (aws codeartifact login --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+  fi
 }
 
 function if_codeartifact_npm_login() {
   # TODO execute codeartifact_npm_login if CODEARTIFACT_REPOSITORY_ARN CODEARTIFACT_NPM_NAMESPACE are set and npm is installed
+  debug "Executing if_codeartifact_npm_login()"
+  if [[ -n "${CODEARTIFACT_REPOSITORY_ARN+x}" ]] && [[ $(which npm) ]]; then
+    codeartifact_npm_login
+  fi
 }
 
 function codeartifact_dotnet_login() {
   # TODO Implement me
+  debug "Executing codeartifact_dotnet_login()"
+  parse_repository_arn
+  (aws codeartifact login --tool dotnet --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
 }
 
 function if_codeartifact_dotnet_login() {
   # TODO execute codeartifact_dotnet_login if CODEARTIFACT_REPOSITORY_ARN variables and dotnet are installed
+  debug "Executing if_codeartifact_dotnet_login()"
+  if [[ "${CODEARTIFACT_REPOSITORY_ARN+x}" ]] && [[ $(which dotnet) ]]; then
+    codeartifact_dotnet_login
+  fi
 }
 
 function codeartifact_maven_login() {
   # TODO Implement me
+  debug "Executing codeartifact_maven_login()"
+  parse_repository_arn
+  debug "Maven not currently supported by aws codeartifact login command"
 }
 
 function if_codeartifact_maven_login() {
   # TODO Implement me
+  debug "Executing if_codeartifact_maven_login()"
+  if [[ ${CODEARTIFACT_REPOSITORY_ARN+x} ]] && [[ $(which mvn) ]]; then
+    codeartifact_maven_login
+  fi
 }
 
 # TODO Get rid of me
@@ -297,9 +342,9 @@ function codeartifact_login() {
   # aws codeartifact list-package-versions --domain my_domain --domain-owner 111122223333 --repository my_repo --format maven --namespace com.company.framework --package my-package-name
   debug "Calling codeartifact_login()"
   mkdir codeartifact
-  echo "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
-    --domain-owner ${AWS_ACCOUNT_ID} \
-    --region ${AWS_DEFAULT_REGION} \
+  echo "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain "${AWS_CODEARTIFACT_DOMAIN}" \
+    --domain-owner "${AWS_ACCOUNT_ID}" \
+    --region "${AWS_DEFAULT_REGION}" \
     --query authorizationToken --output text)" > codeartifact/token
 
   debug "CODEARTIFACT_AUTH_TOKEN saved to file: codeartifact/token"
@@ -328,5 +373,6 @@ function initialize() {
   if_aws_account_id
   if_git_crypt_unlock
   if_local_path
-  if_codeartifact_login
+  if_codeartifact_dotnet_login
+  if_codeartifact_npm_login
 }

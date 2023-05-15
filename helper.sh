@@ -418,9 +418,27 @@ function if_local_path() {
   fi
 }
 
-# Get authorization token for aws codeartifact
+## Execute 'aws codeartifact login --tool ...' for npm / dotnet
 function codeartifact_login() {
   debug "Calling codeartifact_login()"
+  if [ $(which npm) ]; then
+    debug "Updating npmrc with codeartifact token"
+    aws codeartifact login --tool npm --domain ${AWS_CODEARTIFACT_DOMAIN} --repository ${AWS_CODEARTIFACT_REPO} \
+      --domain-owner ${AWS_ACCOUNT_ID} --region ${AWS_DEFAULT_REGION}
+  else
+    debug "npm binary not detected"
+  fi
+
+  if [ $(which dotnet) ]; then
+    debug "Updating NuGet.config with codeartifact token"
+    aws codeartifact login --tool dotnet --domain ${AWS_CODEARTIFACT_DOMAIN} --repository ${AWS_CODEARTIFACT_REPO} \
+      --domain-owner ${AWS_ACCOUNT_ID} --region ${AWS_DEFAULT_REGION}
+  else
+    debug "dotnet binary not detected"
+  fi
+
+  ## exporting generic token to avoid breaking existing pipelines
+  debug "Exporting CODEARTIFACT_AUTH_TOKEN"
   mkdir codeartifact
   echo "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
     --domain-owner ${AWS_ACCOUNT_ID} \
@@ -433,7 +451,7 @@ function codeartifact_login() {
 # Calls codeartifact_login if AWS_CODEARTIFACT_{DOMAIN,REPO} are set
 function if_codeartifact_login() {
   debug "Calling if_codeartifact_login()"
-  if [[ -n "${AWS_CODEARTIFACT_REPO+x}" ]] && [[ -n "${AWS_CODEARTIFACT_DOMAIN+x}" ]] ; then
+  if [[ -n "${AWS_CODEARTIFACT_REPO+x}" ]] && [[ -n "${AWS_CODEARTIFACT_DOMAIN+x}" ]] && [[ -n "${AWS_DEFAULT_REGION+x}" ]]; then
     debug "Detected account: ${AWS_ACCOUNT_ID}"
     debug "Detected region: ${AWS_DEFAULT_REGION}"
     debug "Detected domain: ${AWS_CODEARTIFACT_DOMAIN}"

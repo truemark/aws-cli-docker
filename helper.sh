@@ -258,16 +258,8 @@ function if_local_path() {
   fi
 }
 
-function parse_repository_arn() {
-  # parse the ARN to get the region, domain, and repository
-  CODEARTIFACT_REGION=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
-  CODEARTIFACT_DOMAIN=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
-  CODEARTIFACT_REPO=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
-}
-
 function codeartifact_npm_login() {
   debug "Executing codeartifact_npm_login()"
-  parse_repository_arn
   # TODO Using a sub-shell do the following: (sub-shell is needed to prevent leaking of variables)
   # TODO  sts assume into CODEARTIFACT_OIDC_ROLE_ARN or CODEARTIFACT_OIDC_ROLE_ARN if not set
   # TODO aws codeartifact login --namespace ${CODEARTIFACT_NPM_NAMESPACE} --tool npm --repository youngliving --domain ${CODEARTIFACT_DOMAIN} --region ${CODEARTIFACT_REGION}
@@ -281,16 +273,18 @@ function codeartifact_npm_login() {
   #fi
 
   ## iterate through CODEARTIFACT_*_NPM_NAMESPACE
-  codeartifact_npm_suffix="_NPM_NAMESPACE"
+  CODEARTIFACT_NPM_SUFFIX="_NPM_NAMESPACE"
+  CODEARTIFACT_NPM_COUNT=0
   for namespace in "${!CODEARTIFACT_@}"; do
-    if [[ "${namespace}" == *"${codeartifact_npm_suffix}" ]]; then
+    if [[ "${namespace}" == *"${CODEARTIFACT_NPM_SUFFIX}" ]]; then
+      CODEARTIFACT_NPM_COUNT=$((CODEARTIFACT_NPM_COUNT+=1))
       value="${!namespace}"
       debug "Executing aws codeartifact login with npm namespace: ${value}"
       (aws codeartifact login --namespace "${value}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
     fi
   done
 
-  if [[ -z "${CODEARTIFACT_NPM_NAMESPACE}" ]]; then
+  if [[ "${CODEARTIFACT_NPM_COUNT}" -eq 0 ]]; then
     debug "Executing aws codeartifact login without namespace"
     (aws codeartifact login --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
   fi
@@ -299,7 +293,7 @@ function codeartifact_npm_login() {
 function if_codeartifact_npm_login() {
   # TODO execute codeartifact_npm_login if CODEARTIFACT_REPOSITORY_ARN CODEARTIFACT_NPM_NAMESPACE are set and npm is installed
   debug "Executing if_codeartifact_npm_login()"
-  if [[ -n "${CODEARTIFACT_REPOSITORY_ARN+x}" ]] && [[ $(which npm) ]]; then
+  if [[ $(which npm) ]]; then
     codeartifact_npm_login
   fi
 }
@@ -307,14 +301,13 @@ function if_codeartifact_npm_login() {
 function codeartifact_dotnet_login() {
   # TODO Implement me
   debug "Executing codeartifact_dotnet_login()"
-  parse_repository_arn
   (aws codeartifact login --tool dotnet --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
 }
 
 function if_codeartifact_dotnet_login() {
   # TODO execute codeartifact_dotnet_login if CODEARTIFACT_REPOSITORY_ARN variables and dotnet are installed
   debug "Executing if_codeartifact_dotnet_login()"
-  if [[ "${CODEARTIFACT_REPOSITORY_ARN+x}" ]] && [[ $(which dotnet) ]]; then
+  if [[ $(which dotnet) ]]; then
     codeartifact_dotnet_login
   fi
 }
@@ -322,14 +315,13 @@ function if_codeartifact_dotnet_login() {
 function codeartifact_maven_login() {
   # TODO Implement me
   debug "Executing codeartifact_maven_login()"
-  parse_repository_arn
   debug "Maven not currently supported by aws codeartifact login command"
 }
 
 function if_codeartifact_maven_login() {
   # TODO Implement me
   debug "Executing if_codeartifact_maven_login()"
-  if [[ ${CODEARTIFACT_REPOSITORY_ARN+x} ]] && [[ $(which mvn) ]]; then
+  if [[ $(which mvn) ]]; then
     codeartifact_maven_login
   fi
 }
@@ -366,6 +358,37 @@ function if_codeartifact_login() {
   fi
 }
 
+function if_codeartifact_iterate_arn() {
+  ## wip: iterate through CODEARTIFACT_*_REPOSITORY_ARN
+  CODEARTIFACT_ARN_SUFFIX="_REPOSITORY_ARN"
+  CODEARTIFACT_ARN_COUNT=0
+  for repository_arn in "${!CODEARTIFACT_@}"; do
+    if [[ "${repository_arn}" == *"${CODEARTIFACT_ARN_SUFFIX}" ]]; then
+      CODEARTIFACT_ARN_COUNT=$((CODEARTIFACT_ARN_COUNT+=1))
+      debug "ARN count: ${CODEARTIFACT_ARN_COUNT}"
+      value="${!repository_arn}"
+      debug "Parsing repository arn for repository: ${value}"
+
+      # parse the ARN to get the region, domain, and repository
+      CODEARTIFACT_REGION=$(echo "${value}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
+      CODEARTIFACT_DOMAIN=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
+      CODEARTIFACT_REPO=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
+
+      debug "Executing if_codeartifact_dotnet_login for ARN: ${value}"
+      if_codeartifact_dotnet_login
+      debug "Executing if_codeartifact_maven_login for ARN: ${value}"
+      if_codeartifact_maven_login
+      debug "Executing if_codeartifact_npm_login for ARN: ${value}"
+      if_codeartifact_npm_login
+    fi
+  done
+
+  if [[ "${CODEARTIFACT_ARN_COUNT}" -eq 0 ]]; then
+    debug "Required CODEARTIFACT_*_REPOSITORY_ARN(s) not found."
+  fi
+}
+
+
 function initialize() {
   aws_pager_off
   aws_authentication
@@ -373,6 +396,5 @@ function initialize() {
   if_aws_account_id
   if_git_crypt_unlock
   if_local_path
-  if_codeartifact_dotnet_login
-  if_codeartifact_npm_login
+  if_codeartifact_iterate_arn
 }

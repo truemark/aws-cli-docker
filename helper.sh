@@ -265,20 +265,18 @@ function codeartifact_npm_login() {
   # TODO aws codeartifact login --namespace ${CODEARTIFACT_NPM_NAMESPACE} --tool npm --repository youngliving --domain ${CODEARTIFACT_DOMAIN} --region ${CODEARTIFACT_REGION}
   # TODO You need to modify this method to loop over CODEARTIFACT_*_OIDC_ROLE_ARN, CODEARTIFACT_*_NPM_NAMESPACE, CODEARTIFACT_*_REPOSITORY_ARN and do the necessary things
 
-  ## iterate through CODEARTIFACT_*_NPM_NAMESPACE
-  CODEARTIFACT_NPM_SUFFIX="_NPM_NAMESPACE"
-  CODEARTIFACT_NPM_COUNT=0
-  for namespace in "${!CODEARTIFACT_@}"; do
-    if [[ "${namespace}" == *"${CODEARTIFACT_NPM_SUFFIX}" ]]; then
-      CODEARTIFACT_NPM_COUNT=$((CODEARTIFACT_NPM_COUNT+=1))
-      value="${!namespace}"
-      debug "Calling aws codeartifact login with npm namespace: ${value}"
-      (aws codeartifact login --namespace "${value}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
-    fi
-  done
+  ## if generic namespace found, login w/ --namespace option
+  if [[ -n "${CODEARTIFACT_NPM_NAMESPACE}" ]] && [[ -z "${NPM_NAMESPACE}" ]]; then
+    debug "Calling aws codeartifact login with npm namespace: ${CODEARTIFACT_NPM_NAMESPACE}"
+    (aws codeartifact login --namespace "${CODEARTIFACT_NPM_NAMESPACE}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+
+  ## if matching namespace found, login w/ matching --namespace option
+  elif [[ -n "${NPM_NAMESPACE}" ]]; then
+    debug "Calling aws codeartifact login with npm namespace: ${NPM_NAMESPACE}"
+    (aws codeartifact login --namespace "${NPM_NAMESPACE}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
 
   ## if no namespace found login w/o --namespace option
-  if [[ "${CODEARTIFACT_NPM_COUNT}" -eq 0 ]]; then
+  elif [[ -z "${NPM_NAMESPACE}" ]] && [[ -z "${CODEARTIFACT_NPM_NAMESPACE}" ]]; then
     debug "Calling aws codeartifact login without namespace"
     (aws codeartifact login --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
   fi
@@ -328,7 +326,9 @@ function codeartifact_login() {
   # aws codeartifact login --tool dotnet --repository youngliving --domain yl --domain-owner 534914120180
   # aws codeartifact list-package-versions --domain my_domain --domain-owner 111122223333 --repository my_repo --format maven --namespace com.company.framework --package my-package-name
   debug "Calling codeartifact_login()"
-  mkdir codeartifact
+  if [ ! -d codeartifact ]; then
+    mkdir codeartifact
+  fi
   echo "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain "${AWS_CODEARTIFACT_DOMAIN}" \
     --domain-owner "${AWS_ACCOUNT_ID}" \
     --region "${AWS_DEFAULT_REGION}" \
@@ -370,6 +370,7 @@ function if_codeartifact_iterate_arn() {
   CODEARTIFACT_ARN_COUNT=0
   for repository_arn in "${!CODEARTIFACT_@}"; do
     if [[ "${repository_arn}" == *"${CODEARTIFACT_ARN_SUFFIX}" ]]; then
+      unset NPM_NAMESPACE
       CODEARTIFACT_ARN_COUNT=$((CODEARTIFACT_ARN_COUNT+=1))
       value="${!repository_arn}"
       debug "Parsing repository arn for repository: ${value}"
@@ -379,17 +380,49 @@ function if_codeartifact_iterate_arn() {
       CODEARTIFACT_DOMAIN=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
       CODEARTIFACT_REPO=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
 
-      ## wip (breaking local tests)
-      #if [[ -n "${CODEARTIFACT_OIDC_ROLE_ARN}" ]]; then
+      ## find matching REPOSITORY_ARN + NPM_NAMESPACE
+      # Extract the X value from the CODEARTIFACT_X_REPOSITORY_ARN variable
+      local x
+      x="${repository_arn#CODEARTIFACT_}"
+      x="${x%_REPOSITORY_ARN}"
+
+      debug "Checking for namespace match"
+      # Check if there is a matching CODEARTIFACT_X_NPM_NAMESPACE variable
+      npm_namespace_var="CODEARTIFACT_${x}_NPM_NAMESPACE"
+      if [[ -n "${!npm_namespace_var}" ]]; then
+        NPM_NAMESPACE=${!npm_namespace_var}
+        debug "CODEARTIFACT_${x}_REPOSITORY_ARN=${!repository_arn}"
+        debug "CODEARTIFACT_${x}_NPM_NAMESPACE=${!npm_namespace_var}"
+      fi
+
+      ## find matching REPOSITORY_ARN + OIDC_ROLE
+      # Extract the X value from the CODEARTIFACT_X_REPOSITORY_ARN variable
+      local x
+      x="${repository_arn#CODEARTIFACT_}"
+      x="${x%_REPOSITORY_ARN}"
+
+      debug "Checking for oidc role match"
+      # Check if there is a matching CODEARTIFACT_X_OIDC_ROLE_ARN variable
+      oidc_role_var="CODEARTIFACT_${x}_OIDC_ROLE_ARN"
+      if [[ -n "${!oidc_role_var}" ]]; then
+        OIDC_ROLE_ARN=${!oidc_role_var}
+        debug "CODEARTIFACT_${x}_REPOSITORY_ARN=${!repository_arn}"
+        debug "CODEARTIFACT_${x}_OIDC_ROLE_ARN=${!oidc_role_var}"
+      fi
+
+      ## wip (awaiting roles I can assume to verify)
+      #if [[ -n "${CODEARTIFACT_OIDC_ROLE_ARN}" ]] && [[ -z "${OIDC_ROLE_ARN}" ]]; then
       #  (aws sts assume-role --role-arn "${CODEARTIFACT_OIDC_ROLE_ARN}" --role-session-name "${AWS_ROLE_SESSION_NAME}")
-      #elif [[ -z "${CODEARTIFACT_OIDC_ROLE_ARN}" ]] && [[ -n "${AWS_OIDC_ROLE_ARN}" ]]; then
+      #elif [[ -z "${CODEARTIFACT_OIDC_ROLE_ARN}" ]] && [[ -n "${OIDC_ROLE_ARN}" ]]; then
+      #  (aws sts assume-role --role-arn "${OIDC_ROLE_ARN}" --role-session-name "${AWS_ROLE_SESSION_NAME}")
+      #elif [[ -z "${CODEARTIFACT_OIDC_ROLE_ARN}" ]] && [[ -z "${OIDC_ROLE_ARN}" ]] && [[ -n "${AWS_OIDC_ROLE_ARN}" ]]; then
       #  (aws sts assume-role --role-arn "${AWS_OIDC_ROLE_ARN}" --role-session-name "${AWS_ROLE_SESSION_NAME}")
       #fi
 
       debug "Calling if_codeartifact_dotnet_login for ARN: ${value}"
       if_codeartifact_dotnet_login
       debug "Calling if_codeartifact_maven_login for ARN: ${value}"
-      if_codeartifact_maven_login
+      #if_codeartifact_maven_login
       debug "Calling if_codeartifact_npm_login for ARN: ${value}"
       if_codeartifact_npm_login
     fi

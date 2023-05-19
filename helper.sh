@@ -25,6 +25,8 @@ function aws_default_authentication() {
   export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
   debug "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
 }
+# This function can optionally set the following variable
+#  AWS_ROLE_SESSION_DURATION (optional, default is 3600)
 
 # This function requires the following variables be set
 #  AWS_WEB_IDENTITY_TOKEN or AWS_WEB_IDENTITY_TOKEN_FILE
@@ -95,6 +97,8 @@ function aws_pop_authentication_history() {
 # This function requires the following variables be set
 #  AWS_ASSUME_ROLE_ARN
 #  AWS_ROLE_SESSION_NAME
+# This function optionally accepts the following variable
+#  AWS_ASSUME_ROLE_DURATION
 # This function will export the following variables
 #  AWS_ACCESS_KEY_ID
 #  AWS_SECRET_ACCESS_KEY
@@ -117,7 +121,8 @@ function aws_assume_role() {
 
   # Get the STS credentials and set them up for use
   local aws_sts_result
-  aws_sts_result=$(aws sts assume-role --role-arn "${assume_role_arn_expanded}" --role-session-name "${AWS_ROLE_SESSION_NAME}" --duration-seconds 7200)
+  local duration="${AWS_ROLE_SESSION_DURATION:-3600}"
+  aws_sts_result=$(aws sts assume-role --role-arn "${assume_role_arn_expanded}" --role-session-name "${AWS_ROLE_SESSION_NAME}" --duration-seconds "${duration}")
   aws_clear_authentication
   AWS_ACCESS_KEY_ID=$(echo "${aws_sts_result}" | jq -r .Credentials.AccessKeyId)
   AWS_SECRET_ACCESS_KEY=$(echo "${aws_sts_result}" | jq -r .Credentials.SecretAccessKey)

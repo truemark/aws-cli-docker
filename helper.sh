@@ -98,7 +98,7 @@ function aws_pop_authentication_history() {
 #  AWS_ASSUME_ROLE_ARN
 #  AWS_ROLE_SESSION_NAME
 # This function optionally accepts the following variable
-#  AWS_ASSUME_ROLE_DURATION
+#  AWS_ROLE_SESSION_DURATION
 # This function will export the following variables
 #  AWS_ACCESS_KEY_ID
 #  AWS_SECRET_ACCESS_KEY

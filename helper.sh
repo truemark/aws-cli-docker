@@ -28,16 +28,30 @@ function aws_default_authentication() {
 
 # This function requires the following variables be set
 #  AWS_WEB_IDENTITY_TOKEN or AWS_WEB_IDENTITY_TOKEN_FILE
-#  AWS_ROLE_ARN or AWS_OIDC_ROLE_ARN
+#  AWS_ROLE_ARN or AWS_OIDC_ROLE_ARN or CODEARTIFACT_OIDC_ROLE_ARN
 # If not already set, this function will set AWS_WEB_IDENTITY_TOKEN_FILE and export
 # the AWS_WEB_IDENTITY_TOKEN_FILE and AWS_ROLE_ARN variables.
 function aws_oidc_authentication() {
   debug "Calling aws_oidc_authentication()"
 
+  # Support LOOP_OIDC_ROLE_ARN
+  if [[ -n "${LOOP_OIDC_ROLE_ARN+x}" ]]; then
+    AWS_ROLE_ARN="${LOOP_OIDC_ROLE_ARN}"
+    AWS_ROLE_ARN=${AWS_ROLE_ARN:?'is a required variable or LOOP_OIDC_ROLE_ARN must be set'}
+    debug "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
+
+  # Support CODEARTIFACT_OIDC_ROLE_ARN
+  elif [[ -n "${CODEARTIFACT_OIDC_ROLE_ARN+x}" ]]; then
+    AWS_ROLE_ARN="${CODEARTIFACT_OIDC_ROLE_ARN}"
+    AWS_ROLE_ARN=${AWS_ROLE_ARN:?'is a required variable or CODEARTIFACT_OIDC_ROLE_ARN must be set'}
+    debug "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
+
   # BitBucket has standardized on AWS_OIDC_ROLE_ARN in most their pipes
-  [[ -n "${AWS_OIDC_ROLE_ARN+x}" ]] && AWS_ROLE_ARN="${AWS_OIDC_ROLE_ARN}"
-  AWS_ROLE_ARN=${AWS_ROLE_ARN:?'is a required variable or AWS_OIDC_ROLE_ARN must be set'}
-  debug "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
+  elif [[ -n "${AWS_OIDC_ROLE_ARN+x}" ]]; then
+    AWS_ROLE_ARN="${AWS_OIDC_ROLE_ARN}"
+    AWS_ROLE_ARN=${AWS_ROLE_ARN:?'is a required variable or AWS_OIDC_ROLE_ARN must be set'}
+    debug "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
+  fi
 
   if [[ -n "${AWS_WEB_IDENTITY_TOKEN+x}" ]]; then
     [[ "${AWS_WEB_IDENTITY_TOKEN}" == "" ]] && >&2 echo "AWS_WEB_IDENTITY_TOKEN was provided and is empty" && exit 1
@@ -92,9 +106,13 @@ function aws_pop_authentication_history() {
   debug "Popped entry off AWS_AUTHENTICATION_HISTORY"
 }
 
+# This function can optionally set the following variable
+#  AWS_ROLE_SESSION_DURATION (optional, default is 3600)
 # This function requires the following variables be set
 #  AWS_ASSUME_ROLE_ARN
 #  AWS_ROLE_SESSION_NAME
+# This function optionally accepts the following variable
+#  AWS_ROLE_SESSION_DURATION
 # This function will export the following variables
 #  AWS_ACCESS_KEY_ID
 #  AWS_SECRET_ACCESS_KEY
@@ -117,7 +135,8 @@ function aws_assume_role() {
 
   # Get the STS credentials and set them up for use
   local aws_sts_result
-  aws_sts_result=$(aws sts assume-role --role-arn "${assume_role_arn_expanded}" --role-session-name "${AWS_ROLE_SESSION_NAME}")
+  local duration="${AWS_ROLE_SESSION_DURATION:-3600}"
+  aws_sts_result=$(aws sts assume-role --role-arn "${assume_role_arn_expanded}" --role-session-name "${AWS_ROLE_SESSION_NAME}" --duration-seconds "${duration}")
   aws_clear_authentication
   AWS_ACCESS_KEY_ID=$(echo "${aws_sts_result}" | jq -r .Credentials.AccessKeyId)
   AWS_SECRET_ACCESS_KEY=$(echo "${aws_sts_result}" | jq -r .Credentials.SecretAccessKey)
@@ -259,57 +278,88 @@ function if_local_path() {
 }
 
 function codeartifact_npm_login() {
-  # parse the ARN to get the region, domain, and repository
-  CODEARTIFACT_REGION=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
-  CODEARTIFACT_DOMAIN=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
-  CODEARTIFACT_REPO=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
-  # TODO Using a sub-shell do the following: (sub-shell is needed to prevent leaking of variables)
-  # TODO  sts assume into CODEARTIFACT_OIDC_ROLE_ARN or CODEARTIFACT_OIDC_ROLE_ARN if not set
-  # TODO aws codeartifact login --namespace ${CODEARTIFACT_NPM_NAMESPACE} --tool npm --repository youngliving --domain ${CODEARTIFACT_DOMAIN} --region ${CODEARTIFACT_REGION}
-  # TODO You need to modify this method to loop over CODEARTIFACT_*_OIDC_ROLE_ARN, CODEARTIFACT_*_NPM_NAMESPACE, CODEARTIFACT_*_REPOSITORY_ARN and do the necessary things
+  debug "Calling codeartifact_npm_login()"
+
+  ## if generic namespace found, login w/ --namespace option
+  if [[ -n "${CODEARTIFACT_NPM_NAMESPACE}" ]] && [[ -z "${LOOP_NPM_NAMESPACE}" ]]; then
+    debug "Calling aws codeartifact login with npm namespace: ${CODEARTIFACT_NPM_NAMESPACE}"
+    (aws codeartifact login --namespace "${CODEARTIFACT_NPM_NAMESPACE}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+
+  ## if matching namespace found, login w/ matching --namespace option
+  elif [[ -n "${LOOP_NPM_NAMESPACE}" ]]; then
+    debug "Calling aws codeartifact login with npm namespace: ${LOOP_NPM_NAMESPACE}"
+    (aws codeartifact login --namespace "${LOOP_NPM_NAMESPACE}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+
+  ## if no namespace found login w/o --namespace option
+  elif [[ -z "${LOOP_NPM_NAMESPACE}" ]] && [[ -z "${CODEARTIFACT_NPM_NAMESPACE}" ]]; then
+    debug "Calling aws codeartifact login without namespace"
+    (aws codeartifact login --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+  fi
 }
 
 function if_codeartifact_npm_login() {
-  # TODO execute codeartifact_npm_login if CODEARTIFACT_REPOSITORY_ARN CODEARTIFACT_NPM_NAMESPACE are set and npm is installed
+  debug "Calling if_codeartifact_npm_login()"
+  if [[ $(which npm) ]]; then
+    codeartifact_npm_login
+  fi
 }
 
 function codeartifact_dotnet_login() {
-  # TODO Implement me
+  debug "Calling codeartifact_dotnet_login()"
+  (aws codeartifact login --tool dotnet --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
 }
 
 function if_codeartifact_dotnet_login() {
-  # TODO execute codeartifact_dotnet_login if CODEARTIFACT_REPOSITORY_ARN variables and dotnet are installed
+  debug "Calling if_codeartifact_dotnet_login()"
+  if [[ $(which dotnet) ]]; then
+    codeartifact_dotnet_login
+  fi
 }
 
 function codeartifact_maven_login() {
-  # TODO Implement me
+  debug "Calling codeartifact_maven_login()"
+  debug "Note: Maven not currently supported by aws codeartifact login command; generating token"
+  if_codeartifact_legacy
 }
 
 function if_codeartifact_maven_login() {
-  # TODO Implement me
+  debug "Calling if_codeartifact_maven_login()"
+  if [[ $(which mvn) ]]; then
+    codeartifact_maven_login
+  fi
 }
 
-# TODO Get rid of me
+# retained for backwards compatibility
 # Get authorization token for aws codeartifact
 function codeartifact_login() {
-  # aws codeartifact login --namespace yl --tool npm --repository youngliving --domain yl --profile yl-devops --region us-west-2
-  # aws codeartifact login --tool dotnet --repository youngliving --domain yl --domain-owner 534914120180
-  # aws codeartifact list-package-versions --domain my_domain --domain-owner 111122223333 --repository my_repo --format maven --namespace com.company.framework --package my-package-name
   debug "Calling codeartifact_login()"
-  mkdir codeartifact
-  echo "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain ${AWS_CODEARTIFACT_DOMAIN} \
-    --domain-owner ${AWS_ACCOUNT_ID} \
-    --region ${AWS_DEFAULT_REGION} \
+  if [ ! -d codeartifact ]; then
+    mkdir codeartifact
+  fi
+  echo "export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain "${AWS_CODEARTIFACT_DOMAIN}" \
+    --domain-owner "${AWS_ACCOUNT_ID}" \
+    --region "${AWS_DEFAULT_REGION}" \
     --query authorizationToken --output text)" > codeartifact/token
 
   debug "CODEARTIFACT_AUTH_TOKEN saved to file: codeartifact/token"
 }
 
-# TODO Get rid of me
+# retained for backwards compatibility
 # Calls codeartifact_login if AWS_CODEARTIFACT_{DOMAIN,REPO} are set
-function if_codeartifact_login() {
-  debug "Calling if_codeartifact_login()"
+function if_codeartifact_legacy() {
+  debug "Calling if_codeartifact_legacy()"
   if [[ -n "${AWS_CODEARTIFACT_REPO+x}" ]] && [[ -n "${AWS_CODEARTIFACT_DOMAIN+x}" ]] ; then
+    debug "Detected account: ${AWS_ACCOUNT_ID}"
+    debug "Detected region: ${AWS_DEFAULT_REGION}"
+    debug "Detected domain: ${AWS_CODEARTIFACT_DOMAIN}"
+    debug "Detected repo: ${AWS_CODEARTIFACT_REPO}"
+
+    codeartifact_login
+  elif [[ -n "${CODEARTIFACT_REPO+x}" ]] && [[ -n "${CODEARTIFACT_DOMAIN+x}" ]] && [[ -n "${CODEARTIFACT_REGION+x}" ]]; then
+    AWS_DEFAULT_REGION="${CODEARTIFACT_REGION}"
+    AWS_CODEARTIFACT_DOMAIN="${CODEARTIFACT_DOMAIN}"
+    AWS_CODEARTIFACT_REPO="${CODEARTIFACT_REPO}"
+
     debug "Detected account: ${AWS_ACCOUNT_ID}"
     debug "Detected region: ${AWS_DEFAULT_REGION}"
     debug "Detected domain: ${AWS_CODEARTIFACT_DOMAIN}"
@@ -321,6 +371,70 @@ function if_codeartifact_login() {
   fi
 }
 
+function if_codeartifact_new() {
+  debug "Calling if_codeartifact_new()"
+  CODEARTIFACT_ARN_SUFFIX="_REPOSITORY_ARN"
+  CODEARTIFACT_ARN_COUNT=0
+  for repository_arn in "${!CODEARTIFACT_@}"; do
+    if [[ "${repository_arn}" == *"${CODEARTIFACT_ARN_SUFFIX}" ]]; then
+      unset LOOP_NPM_NAMESPACE
+      CODEARTIFACT_ARN_COUNT=$((CODEARTIFACT_ARN_COUNT+=1))
+      value="${!repository_arn}"
+      debug "Parsing repository arn for repository: ${value}"
+
+      # parse the ARN to get the region, domain, and repository
+      CODEARTIFACT_REGION=$(echo "${value}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
+      CODEARTIFACT_DOMAIN=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
+      CODEARTIFACT_REPO=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
+
+      ## find matching REPOSITORY_ARN + NPM_NAMESPACE
+      # Extract the value from the CODEARTIFACT_*_REPOSITORY_ARN variable
+      local x
+      x="${repository_arn#CODEARTIFACT_}"
+      x="${x%_REPOSITORY_ARN}"
+
+      debug "Checking for namespace match"
+      # Check if there is a matching CODEARTIFACT_*_NPM_NAMESPACE variable
+      npm_namespace_var="CODEARTIFACT_${x}_NPM_NAMESPACE"
+      if [[ -n "${!npm_namespace_var}" ]]; then
+        LOOP_NPM_NAMESPACE=${!npm_namespace_var}
+        debug "CODEARTIFACT_${x}_REPOSITORY_ARN=${!repository_arn}"
+        debug "CODEARTIFACT_${x}_NPM_NAMESPACE=${!npm_namespace_var}"
+      fi
+
+      ## find matching REPOSITORY_ARN + OIDC_ROLE
+      # Extract the value from the CODEARTIFACT_*_REPOSITORY_ARN variable
+      local y
+      y="${repository_arn#CODEARTIFACT_}"
+      y="${x%_REPOSITORY_ARN}"
+
+      debug "Checking for oidc role match"
+      # Check if there is a matching CODEARTIFACT_*_OIDC_ROLE_ARN variable
+      oidc_role_var="CODEARTIFACT_${y}_OIDC_ROLE_ARN"
+      if [[ -n "${!oidc_role_var}" ]]; then
+        LOOP_OIDC_ROLE_ARN=${!oidc_role_var}
+        debug "CODEARTIFACT_${y}_REPOSITORY_ARN=${!repository_arn}"
+        debug "CODEARTIFACT_${y}_OIDC_ROLE_ARN=${!oidc_role_var}"
+      fi
+
+      if [[ -n "${LOOP_OIDC_ROLE_ARN+x}" ]]; then
+        aws_oidc_authentication
+      fi
+
+      debug "Calling if_codeartifact_dotnet_login for ARN: ${value}"
+      if_codeartifact_dotnet_login
+      debug "Calling if_codeartifact_maven_login for ARN: ${value}"
+      if_codeartifact_maven_login
+      debug "Calling if_codeartifact_npm_login for ARN: ${value}"
+      if_codeartifact_npm_login
+    fi
+  done
+
+  if [[ "${CODEARTIFACT_ARN_COUNT}" -eq 0 ]]; then
+    debug "CODEARTIFACT_*_REPOSITORY_ARN(s) not found."
+  fi
+}
+
 function initialize() {
   aws_pager_off
   aws_authentication
@@ -328,5 +442,6 @@ function initialize() {
   if_aws_account_id
   if_git_crypt_unlock
   if_local_path
-  if_codeartifact_login
+  if_codeartifact_new
+  if_codeartifact_legacy
 }

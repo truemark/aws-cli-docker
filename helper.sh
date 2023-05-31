@@ -25,6 +25,8 @@ function aws_default_authentication() {
   export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
   debug "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}"
 }
+# This function can optionally set the following variable
+#  AWS_ROLE_SESSION_DURATION (optional, default is 3600)
 
 # This function requires the following variables be set
 #  AWS_WEB_IDENTITY_TOKEN or AWS_WEB_IDENTITY_TOKEN_FILE

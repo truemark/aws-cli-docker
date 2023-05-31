@@ -371,8 +371,8 @@ function if_codeartifact_legacy() {
   fi
 }
 
-function if_codeartifact_new() {
-  debug "Calling if_codeartifact_new()"
+function if_codeartifact() {
+  debug "Calling if_codeartifact()"
   CODEARTIFACT_ARN_SUFFIX="_REPOSITORY_ARN"
   CODEARTIFACT_ARN_COUNT=0
   for repository_arn in "${!CODEARTIFACT_@}"; do
@@ -417,9 +417,9 @@ function if_codeartifact_new() {
         debug "CODEARTIFACT_${y}_OIDC_ROLE_ARN=${!oidc_role_var}"
       fi
 
-      if [[ -n "${LOOP_OIDC_ROLE_ARN+x}" ]]; then
-        aws_oidc_authentication
-      fi
+      ## assume role and login functions execute within subshell
+      (
+      aws sts assume-role --role-arn "${AWS_CODEARTIFACT_ASSUME_ROLE_ARN}" --role-session-name "${AWS_ROLE_SESSION_NAME}"
 
       debug "Calling if_codeartifact_dotnet_login for ARN: ${value}"
       if_codeartifact_dotnet_login
@@ -427,6 +427,7 @@ function if_codeartifact_new() {
       if_codeartifact_maven_login
       debug "Calling if_codeartifact_npm_login for ARN: ${value}"
       if_codeartifact_npm_login
+      )
     fi
   done
 
@@ -442,6 +443,6 @@ function initialize() {
   if_aws_account_id
   if_git_crypt_unlock
   if_local_path
-  if_codeartifact_new
+  if_codeartifact
   if_codeartifact_legacy
 }

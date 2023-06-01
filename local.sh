@@ -15,8 +15,8 @@ export BUILDKIT_PROGRESS=plain
 #docker image build -t moo --build-arg OS_NAME="debian" --build-arg OS_VERSION="bookworm" -f Dockerfile .
 #docker image build -t moo --build-arg OS_NAME="debian" --build-arg OS_VERSION="bookworm-slim" -f Dockerfile .
 #docker image build -t moo --build-arg OS_NAME="amazonlinux" --build-arg OS_VERSION="2" -f Dockerfile .
-docker image build -t moo --build-arg OS_NAME="amazonlinux" --build-arg OS_VERSION="2022" -f Dockerfile .
-#docker image build -t moo --build-arg OS_NAME="amazonlinux" --build-arg OS_VERSION="2023" -f Dockerfile .
+#docker image build -t moo --build-arg OS_NAME="amazonlinux" --build-arg OS_VERSION="2022" -f Dockerfile .
+docker image build -t moo --build-arg OS_NAME="amazonlinux" --build-arg OS_VERSION="2023" -f Dockerfile .
 #docker image build -t moo --build-arg OS_NAME="alpine" --build-arg OS_VERSION="3.16" -f alpine.Dockerfile .
 #docker image build -t moo --build-arg OS_NAME="alpine" --build-arg OS_VERSION="3.17" -f alpine.Dockerfile .
 

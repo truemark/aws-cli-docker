@@ -36,22 +36,8 @@ function aws_default_authentication() {
 function aws_oidc_authentication() {
   debug "Calling aws_oidc_authentication()"
 
-  # TODO If we use a subshell, this is not necessary. Just set the AWS_OIDC_ROLE_ARN and call the function in the subshell.
-  # Support LOOP_OIDC_ROLE_ARN
-  if [[ -n "${LOOP_OIDC_ROLE_ARN+x}" ]]; then
-    AWS_ROLE_ARN="${LOOP_OIDC_ROLE_ARN}"
-    AWS_ROLE_ARN=${AWS_ROLE_ARN:?'is a required variable or LOOP_OIDC_ROLE_ARN must be set'}
-    debug "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
-
-  # TODO If we use a subshell, this is not necessary. Just set the AWS_OIDC_ROLE_ARN and call the function in the subshell.
-  # Support CODEARTIFACT_OIDC_ROLE_ARN
-  elif [[ -n "${CODEARTIFACT_OIDC_ROLE_ARN+x}" ]]; then
-    AWS_ROLE_ARN="${CODEARTIFACT_OIDC_ROLE_ARN}"
-    AWS_ROLE_ARN=${AWS_ROLE_ARN:?'is a required variable or CODEARTIFACT_OIDC_ROLE_ARN must be set'}
-    debug "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
-
   # BitBucket has standardized on AWS_OIDC_ROLE_ARN in most their pipes
-  elif [[ -n "${AWS_OIDC_ROLE_ARN+x}" ]]; then
+  if [[ -n "${AWS_OIDC_ROLE_ARN+x}" ]]; then
     AWS_ROLE_ARN="${AWS_OIDC_ROLE_ARN}"
     AWS_ROLE_ARN=${AWS_ROLE_ARN:?'is a required variable or AWS_OIDC_ROLE_ARN must be set'}
     debug "AWS_ROLE_ARN=${AWS_ROLE_ARN}"
@@ -281,67 +267,89 @@ function if_local_path() {
   fi
 }
 
-# TODO I would like this method to only depend on CODEARTIFACT_REPOSITORY_ARN and CODEARTIFACT_NPM_NAMESPACE
+function parse_repository_arn() {
+  if [[ -n "${value}" ]]; then ## if called from if_codeartifact
+    debug "Parsing repository arn for repository: ${value}"
+    # parse the ARN to get the region, domain, and repository
+    CODEARTIFACT_REGION=$(echo "${value}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
+    CODEARTIFACT_DOMAIN=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
+    CODEARTIFACT_REPO=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
+
+  elif [[ "${CODEARTIFACT_REPOSITORY_ARN}" ]]; then ## if called from codeartifact_*_login
+    debug "Parsing repository arn for repository: ${CODEARTIFACT_REPOSITORY_ARN}"
+    # parse the ARN to get the region, domain, and repository
+    CODEARTIFACT_REGION=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
+    CODEARTIFACT_DOMAIN=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
+    CODEARTIFACT_REPO=$(echo "${CODEARTIFACT_REPOSITORY_ARN}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
+  else
+    debug "No repository ARN detected."
+  fi
+}
+
+
 function codeartifact_npm_login() {
   debug "Calling codeartifact_npm_login()"
+  parse_repository_arn
 
-  # TODO Don't use LOOP_, just use CODEARTIFACT_NPM_NAMESPACE
-  ## if generic namespace found, login w/ --namespace option
-  if [[ -n "${CODEARTIFACT_NPM_NAMESPACE}" ]] && [[ -z "${LOOP_NPM_NAMESPACE}" ]]; then
-    debug "Calling aws codeartifact login with npm namespace: ${CODEARTIFACT_NPM_NAMESPACE}"
-    (aws codeartifact login --namespace "${CODEARTIFACT_NPM_NAMESPACE}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+  if [[ -n "${CODEARTIFACT_REGION}" ]] && [[ -n "${CODEARTIFACT_DOMAIN}" ]] && [[ -n "${CODEARTIFACT_REPO}" ]]; then
+    ## if namespace found, login w/ --namespace option
+    if [[ -n "${CODEARTIFACT_NPM_NAMESPACE}" ]]; then
+      debug "Calling aws codeartifact login with npm namespace: ${CODEARTIFACT_NPM_NAMESPACE}"
+      (aws codeartifact login --namespace "${CODEARTIFACT_NPM_NAMESPACE}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
 
-  ## if matching namespace found, login w/ matching --namespace option
-  # TODO Don't use LOOP_, just use CODEARTIFACT_NPM_NAMESPACE
-  elif [[ -n "${LOOP_NPM_NAMESPACE}" ]]; then
-    debug "Calling aws codeartifact login with npm namespace: ${LOOP_NPM_NAMESPACE}"
-    (aws codeartifact login --namespace "${LOOP_NPM_NAMESPACE}" --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
-
-  # TODO Don't use LOOP_, just use CODEARTIFACT_NPM_NAMESPACE
-  ## if no namespace found login w/o --namespace option
-  elif [[ -z "${LOOP_NPM_NAMESPACE}" ]] && [[ -z "${CODEARTIFACT_NPM_NAMESPACE}" ]]; then
-    debug "Calling aws codeartifact login without namespace"
-    (aws codeartifact login --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+    ## if no namespace found login w/o --namespace option
+    elif [[ -z "${CODEARTIFACT_NPM_NAMESPACE}" ]]; then
+      debug "Calling aws codeartifact login without namespace"
+      (aws codeartifact login --tool npm --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+    fi
+  else
+    debug "Required codeartifact login variables not found."
   fi
 }
 
 function if_codeartifact_npm_login() {
   debug "Calling if_codeartifact_npm_login()"
-  if [[ $(which npm) ]]; then # TODO You cannot depend on which, use command -v like the other places in this file
+  if [[ $(command -v npm) ]]; then
     codeartifact_npm_login
   fi
 }
 
-# TODO I would like this method to only depend on CODEARTIFACT_REPOSITORY_ARN
 function codeartifact_dotnet_login() {
   debug "Calling codeartifact_dotnet_login()"
-  (aws codeartifact login --tool dotnet --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+  parse_repository_arn
+
+  if [[ -n "${CODEARTIFACT_REGION}" ]] && [[ -n "${CODEARTIFACT_DOMAIN}" ]] && [[ -n "${CODEARTIFACT_REPO}" ]]; then
+    (aws codeartifact login --tool dotnet --repository "${CODEARTIFACT_REPO}" --domain "${CODEARTIFACT_DOMAIN}" --region "${CODEARTIFACT_REGION}")
+  else
+    debug "Required codeartifact login variables not found."
+  fi
 }
 
 function if_codeartifact_dotnet_login() {
   debug "Calling if_codeartifact_dotnet_login()"
-  if [[ $(which dotnet) ]]; then # TODO You cannot depend on which, use command -v like the other places in this file
+  if [[ $(command -v dotnet) ]]; then
     codeartifact_dotnet_login
   fi
 }
 
 function codeartifact_maven_login() {
   debug "Calling codeartifact_maven_login()"
-  debug "Note: Maven not currently supported by aws codeartifact login command; generating token"
+  debug "Note: Maven not supported by aws codeartifact login command; generating token."
+  parse_repository_arn
   if_codeartifact_legacy
 }
 
 function if_codeartifact_maven_login() {
   debug "Calling if_codeartifact_maven_login()"
-  if [[ $(which mvn) ]]; then # TODO You cannot depend on which, use command -v like the other places in this file
+  if [[ $(command -v mvn) ]]; then
     codeartifact_maven_login
   fi
 }
 
 # retained for backwards compatibility
 # Get authorization token for aws codeartifact
-function codeartifact_login() {
-  debug "Calling codeartifact_login()"
+function codeartifact_legacy() {
+  debug "Calling codeartifact_legacy()"
   if [ ! -d codeartifact ]; then
     mkdir codeartifact
   fi
@@ -354,7 +362,7 @@ function codeartifact_login() {
 }
 
 # retained for backwards compatibility
-# Calls codeartifact_login if AWS_CODEARTIFACT_{DOMAIN,REPO} are set
+# Calls codeartifact_legacy if AWS_CODEARTIFACT_{DOMAIN,REPO} are set
 function if_codeartifact_legacy() {
   debug "Calling if_codeartifact_legacy()"
   if [[ -n "${AWS_CODEARTIFACT_REPO+x}" ]] && [[ -n "${AWS_CODEARTIFACT_DOMAIN+x}" ]] ; then
@@ -363,26 +371,28 @@ function if_codeartifact_legacy() {
     debug "Detected domain: ${AWS_CODEARTIFACT_DOMAIN}"
     debug "Detected repo: ${AWS_CODEARTIFACT_REPO}"
 
-    codeartifact_login
-  elif [[ -n "${CODEARTIFACT_REPO+x}" ]] && [[ -n "${CODEARTIFACT_DOMAIN+x}" ]] && [[ -n "${CODEARTIFACT_REGION+x}" ]]; then
+    codeartifact_legacy
+
+  # Calls codeartifact_legacy if CODEARTIFACT_{REGION,DOMAIN} are set
+  elif [[ -n "${CODEARTIFACT_DOMAIN+x}" ]] && [[ -n "${CODEARTIFACT_REGION+x}" ]]; then
     AWS_DEFAULT_REGION="${CODEARTIFACT_REGION}"
     AWS_CODEARTIFACT_DOMAIN="${CODEARTIFACT_DOMAIN}"
-    AWS_CODEARTIFACT_REPO="${CODEARTIFACT_REPO}"
 
     debug "Detected account: ${AWS_ACCOUNT_ID}"
     debug "Detected region: ${AWS_DEFAULT_REGION}"
     debug "Detected domain: ${AWS_CODEARTIFACT_DOMAIN}"
-    debug "Detected repo: ${AWS_CODEARTIFACT_REPO}"
 
-    codeartifact_login
+    codeartifact_legacy
   else
-    debug "Codeartifact variables not detected"
+    debug "Required codeartifact variables not found."
   fi
 }
 
 # Supports the following environment variables
 # - CODEARTIFACT_REPOSITORY_ARN & CODEARTIFACT_*_REPOSITORY_ARN
 # - CODEARTIFACT_NPM_NAMESPACE & CODEARTIFACT_*_NPM_NAMESPACE
+# - CODEARTIFACT_OIDC_ROLE_ARN & CODEARTIFACT_*_OIDC_ROLE_ARN
+# - AWS_CODEARTIFACT_ASSUME_ROLE_ARN & AWS_CODEARTIFACT_*_ASSUME_ROLE_ARN
 
 function if_codeartifact() {
   (
@@ -391,55 +401,44 @@ function if_codeartifact() {
     CODEARTIFACT_ARN_COUNT=0
     for repository_arn in "${!CODEARTIFACT_@}"; do
       if [[ "${repository_arn}" == *"${CODEARTIFACT_ARN_SUFFIX}" ]]; then
-        unset LOOP_NPM_NAMESPACE
         CODEARTIFACT_ARN_COUNT=$((CODEARTIFACT_ARN_COUNT+=1))
         value="${!repository_arn}"
-        debug "Parsing repository arn for repository: ${value}"
+        parse_repository_arn
 
-        # TODOgit Do the parsing in the _login methods so we can use them directly when needed
-        # parse the ARN to get the region, domain, and repository
-        CODEARTIFACT_REGION=$(echo "${value}" | sed 's/arn:aws:codeartifact://' | sed 's/:.*//')
-        CODEARTIFACT_DOMAIN=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\///' | sed 's/\/.*//')
-        CODEARTIFACT_REPO=$(echo "${value}" | sed 's/arn:aws:codeartifact:.*:repository\/.*\///')
-
-        ## find matching REPOSITORY_ARN + NPM_NAMESPACE
         # Extract the value from the CODEARTIFACT_*_REPOSITORY_ARN variable
         local x
         x="${repository_arn#CODEARTIFACT_}"
         x="${x%_REPOSITORY_ARN}"
 
-        debug "Checking for namespace match"
+        debug "Checking for npm namespace match"
         # Check if there is a matching CODEARTIFACT_*_NPM_NAMESPACE variable
         npm_namespace_var="CODEARTIFACT_${x}_NPM_NAMESPACE"
         if [[ -n "${!npm_namespace_var}" ]]; then
-          # TODO You don't need to set LOOP, ust set the CODEARTIFACT_NPM_NAMESPACE
-          LOOP_NPM_NAMESPACE=${!npm_namespace_var}
-          debug "CODEARTIFACT_${x}_REPOSITORY_ARN=${!repository_arn}"
-          debug "CODEARTIFACT_${x}_NPM_NAMESPACE=${!npm_namespace_var}"
+          CODEARTIFACT_NPM_NAMESPACE=${!npm_namespace_var}
         fi
 
-        ## find matching REPOSITORY_ARN + OIDC_ROLE
-        # Extract the value from the CODEARTIFACT_*_REPOSITORY_ARN variable
-        local y
-        y="${repository_arn#CODEARTIFACT_}"
-        y="${x%_REPOSITORY_ARN}"
-
-        # TODO Just set AWS_OIDC_ROLE_ARN and call aws_oidc_authentication() if the variable is set
-        debug "Checking for oidc role match"
+        debug "Checking for oidc role arn match"
         # Check if there is a matching CODEARTIFACT_*_OIDC_ROLE_ARN variable
-        oidc_role_var="CODEARTIFACT_${y}_OIDC_ROLE_ARN"
+        oidc_role_var="CODEARTIFACT_${x}_OIDC_ROLE_ARN"
         if [[ -n "${!oidc_role_var}" ]]; then
-          LOOP_OIDC_ROLE_ARN=${!oidc_role_var}
-          debug "CODEARTIFACT_${y}_REPOSITORY_ARN=${!repository_arn}"
-          debug "CODEARTIFACT_${y}_OIDC_ROLE_ARN=${!oidc_role_var}"
+          debug "Calling aws_oidc_authentication"
+          AWS_OIDC_ROLE_ARN=${!oidc_role_var}
+          aws_oidc_authentication
+        elif [[ -n "${CODEARTIFACT_OIDC_ROLE_ARN}" ]]; then
+          AWS_OIDC_ROLE_ARN=${CODEARTIFACT_OIDC_ROLE_ARN}
+          aws_oidc_authentication
         fi
 
-        ## assume role and login functions execute within subshell
-        # TODO Need to support AWS_CODEARTIFACT_ASSUME_ROLE_ARN as well as AWS_CODEARTIFACT_X_ASSUME_ROLE_ARN
-        # TODO Just set AWS_ASSUME_ROLE_ARN and call aws_assume_role()
-        if [[ -n "${AWS_CODEARTIFACT_ASSUME_ROLE_ARN}" ]]; then
+        debug "Checking for assume role arn match"
+        assume_role_var="AWS_CODEARTIFACT_${x}_ASSUME_ROLE_ARN"
+        # Check if there is a matching AWS_CODEARTIFACT_*_ASSUME_ROLE_ARN variable
+        if [[ -n "${!assume_role_var}" ]]; then
+          debug "Calling aws_assume_role"
+          AWS_ASSUME_ROLE_ARN=${!assume_role_var}
+          aws_assume_role
+        elif [[ -n "${AWS_CODEARTIFACT_ASSUME_ROLE_ARN}" ]]; then
+          debug "Calling aws_assume_role"
           AWS_ASSUME_ROLE_ARN=${AWS_CODEARTIFACT_ASSUME_ROLE_ARN}
-          #aws sts assume-role --role-arn "${AWS_CODEARTIFACT_ASSUME_ROLE_ARN}" --role-session-name "${AWS_ROLE_SESSION_NAME}"
           aws_assume_role
         fi
 

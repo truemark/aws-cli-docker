@@ -154,7 +154,7 @@ function if_aws_assume_role() {
 #    - AWS_ROLE_ARN
 function aws_authentication() {
   debug "Calling aws_authentication()"
-  if [[ -n "${AWS_WEB_IDENTITY_TOKEN+x}${AWS_WEB_IDENTITY_TOKEN_FILE+x}${AWS_ROLE_ARN+x}${AWS_OIDC_ROLE_ARN}" ]]; then
+  if [[ -n "${AWS_WEB_IDENTITY_TOKEN+x}${AWS_WEB_IDENTITY_TOKEN_FILE+x}${AWS_ROLE_ARN+x}${AWS_OIDC_ROLE_ARN+x}" ]]; then
     debug "Using aws_oidc_authentication"
     aws_oidc_authentication
   elif [[ -n "${AWS_ACCESS_KEY_ID+x}" ]]; then

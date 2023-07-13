@@ -457,6 +457,27 @@ function if_codeartifact() {
   )
 }
 
+function ecr_login() {
+  (
+    debug "Calling ecr_login()"
+    if [[ -n "${AWS_ECR_OIDC_ROLE_ARN}" ]]; then
+      debug "Detected AWS_ECR_OIDC_ROLE_ARN: ${AWS_ECR_OIDC_ROLE_ARN}"
+      AWS_OIDC_ROLE_ARN=${AWS_ECR_OIDC_ROLE_ARN}
+      aws_oidc_authentication
+    fi
+    debug "Detected AWS_ECR_ACCOUNT_ID: ${AWS_ECR_ACCOUNT_ID}"
+    debug "Detected AWS_ECR_REGION: ${AWS_ECR_REGION}"
+    aws ecr get-login-password --region "${AWS_ECR_REGION}" | docker login --username AWS --password-stdin "${AWS_ECR_ACCOUNT_ID}.dkr.ecr.${AWS_ECR_REGION}.amazonaws.com"
+  )
+}
+
+function if_ecr_login() {
+  debug "Calling if_ecr_login()"
+  if [[ -n "${AWS_ECR_REGION+x}" ]] && [[ -n "${AWS_ECR_ACCOUNT_ID+x}" ]]; then
+    ecr_login
+  fi
+}
+
 function initialize() {
   aws_pager_off
   aws_authentication
@@ -464,6 +485,7 @@ function initialize() {
   if_aws_account_id
   if_git_crypt_unlock
   if_local_path
+  if_ecr_login
   if_codeartifact
   if_codeartifact_legacy
 }

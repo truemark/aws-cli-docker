@@ -460,10 +460,15 @@ function if_codeartifact() {
 function ecr_login() {
   (
     debug "Calling ecr_login()"
-    if [[ -n "${AWS_ECR_OIDC_ROLE_ARN}" ]]; then
+    if [[ -n "${AWS_ECR_OIDC_ROLE_ARN+x}" ]]; then
       debug "Detected AWS_ECR_OIDC_ROLE_ARN: ${AWS_ECR_OIDC_ROLE_ARN}"
       AWS_OIDC_ROLE_ARN=${AWS_ECR_OIDC_ROLE_ARN}
       aws_oidc_authentication
+    fi
+    if [[ -n "${AWS_ECR_ASSUME_ROLE_ARN+x}" ]]; then
+      debug "Detected AWS_ECR_ASSUME_ROLE_ARN: ${AWS_ECR_ASSUME_ROLE_ARN}"
+      AWS_ASSUME_ROLE_ARN=${AWS_ECR_ASSUME_ROLE_ARN}
+      aws_assume_role
     fi
     debug "Detected AWS_ECR_ACCOUNT_ID: ${AWS_ECR_ACCOUNT_ID}"
     debug "Detected AWS_ECR_REGION: ${AWS_ECR_REGION}"

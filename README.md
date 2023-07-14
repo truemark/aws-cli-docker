@@ -92,10 +92,6 @@ docker run -it --rm \
 | AWS_ECR_ASSUME_ROLE_ARN     | Optional role to assume when doing ECR login.                                           | 
 | AWS_ECR_REGION              | Region for ECR login. Ignored if AWS_ECR_ACCOUNT_ID is not set.                         |
 | AWS_ECR_ACCOUNT_ID          | Account ID for ECR login. Ignored if AWS_ECR_REGION not set.                            |
-| AWS_ECR_*_OIDC_ROLE_ARN     | Optional role to assume if using AWS OIDC authentication.                               |
-| AWS_ECR_*_ASSUME_ROLE_ARN   | Optional role to assume when doing ECR login.                                           | 
-| AWS_ECR_*_REGION            | Region for ECR login. Ignored if AWS_ECR_ACCOUNT_ID or AWS_ECR_*_ACCOUNT_ID is not set. |
-| AWS_ECR_*_ACCOUNT_ID        | Account ID for ECR login. Ignored if AWS_ECR_REGION or AWS_ECR_*_REGION is not set.     |
 | AWS_EXCLUDE_ACCOUNT_IDS     | Account IDs to exclude when using aws_organization_account_ids function.                |
 | AWS_EXCLUDE_OU_IDS          | AWS Organizational units to exclude when using aws_organization_account_ids.            |
 | AWS_OIDC_ROLE_ARN           | Alternative variable to AWS_ROLE_ARN.                                                   |

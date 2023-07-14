@@ -35,7 +35,7 @@ COPY --from=test /usr/local/ /usr/local/
 RUN if [ "${OS_NAME}" = "debian" ] || [ "${OS_NAME}" = "ubuntu" ]; then \
       apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq groff tar zip unzip gzip bzip2 curl ca-certificates findutils --no-install-recommends && apt-get -qq clean && rm -rf /var/lib/apt/lists; \
     elif [ "${OS_NAME}" = "amazonlinux" ]; then \
-      yum install -y -q groff tar zip unzip gzip bzip2 findutils && yum clean all; \
+      yum install -y -q groff tar zip unzip gzip bzip2 findutils which && yum clean all; \
     fi
 RUN echo "source /usr/local/bin/helper.sh && initialize" >> /root/.bashrc && \
     chmod +x /root/.bashrc

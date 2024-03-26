@@ -126,11 +126,13 @@ function aws_assume_role() {
   # Get the STS credentials and set them up for use
   local aws_sts_result
   local duration="${AWS_ROLE_SESSION_DURATION:-3600}"
+  debug "Executing aws sts assume-role --role-arn ${assume_role_arn_expanded} --role-session-name ${AWS_ROLE_SESSION_NAME} --duration-seconds ${duration}"
   aws_sts_result=$(aws sts assume-role --role-arn "${assume_role_arn_expanded}" --role-session-name "${AWS_ROLE_SESSION_NAME}" --duration-seconds "${duration}")
   aws_clear_authentication
   AWS_ACCESS_KEY_ID=$(echo "${aws_sts_result}" | jq -r .Credentials.AccessKeyId)
   AWS_SECRET_ACCESS_KEY=$(echo "${aws_sts_result}" | jq -r .Credentials.SecretAccessKey)
   AWS_SESSION_TOKEN=$(echo "${aws_sts_result}" | jq -r .Credentials.SessionToken)
+  debug "Exporting AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN"
   export AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
 }
 
